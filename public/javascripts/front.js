@@ -1,111 +1,52 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 "use strict";
-var Peer = require ("peerjs");
-var peer = new Peer({host: window.location.hostname, port: 9000, path: '/myapp'});
-var userList = [];
 
-peer.listAllPeers(function(list){
-    for(var cnt = 0;cnt < list.length;cnt++){
-        userList.push(list[cnt]);
-    }
-    console.log(userList);
-});
-
-var conn;
-peer.on('open', function(id){
-
-    document.querySelector('#pid').value=id;
-
-
-});
-peer.on("connection",connect);
-function connect(c){
-    conn = c;
-    conn.on('data', function(data) {
-        // Append the data to body.
-        console.log(data);
-        var json=JSON.parse(data);
-        test(json);
-        document.querySelector('#helloworld').appendChild(document.createTextNode(data));
-    });
-
-    conn.on('close', function(err){ alert(conn.peer + ' has left the chat.') });
-}
-function test(data){
-    switch (true) {
-        case /addCube/.test(data.action):
-            addCube();
-            break;
-        case /removeCube/.test(data.action):
-            removeCube(cubes.getObjectById(data.id));
-            break;
-        case /moveCube/.test(data.action):
-            moveCube(cubes.getObjectById(data.id), data.dest);
-        default:
-            console.log("• Didn't match any test");
-            break;
-    }
-    render();
-}
 var THREE=require ('three');
 var Trackball = require('three.trackball');
 var clock = new THREE.Clock();
-var scene, camera,controls, renderer;
-var geom , cubes, axes;
 
-var projector, mouseVector, offset;
 
 var range = 50;
-var mesh;
-
-var elem,widthC,heightC,stats ;
-
+var controls,stats;
+var cubes,geom;
+var renderer,scene,camera;
+var mouseVector,projector,offset;
+var width, height,container;
 var SELECTED,INTERSECTED, plane;
 
 
-document.addEventListener("DOMContentLoaded",function(event){
+function Scene(containerElem){
+    stats = new Stats();
+    stats.domElement.style.position = 'absolute';
+    stats.domElement.style.top = '0px';
 
 
-    document.querySelector("#addCube").addEventListener("click",function(){
-        addCube();
-        if(conn){
-            conn.send(
-                JSON.stringify({"action":"addCube"})
-            );
-        }
-        render();
-    },false);
-    document.querySelector("#importScene").addEventListener("click",function(){importScene();render();},false);
-    document.querySelector("#exportScene").addEventListener("click",function(){exportScene();},false);
-    document.querySelector("#connect").addEventListener("click",connectToPeer,false);
-    document.querySelector("#sendButton").addEventListener("click", sendHello,false);
-    elem   = document.querySelector("#container");
-    widthC  = elem.offsetWidth;
-    heightC = elem.offsetHeight;
-    init();
-    animate();
-});
-
-function init(){
+    container = containerElem ;
+    container.appendChild( stats.domElement );
+    width =container.offsetWidth;
+    height =container.offsetHeight;
 
     scene = new THREE.Scene();
 
-    camera = new THREE.PerspectiveCamera( 45,widthC /heightC, 1, 100000 );
+    camera = new THREE.PerspectiveCamera( 45,width / height, 1, 100000 );
     camera.position.set( 0, 0, range * 2 );
     camera.lookAt( new THREE.Vector3( 0, 0, 0 ) );
 
-    controls = new Trackball( camera,elem );
+
+    renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize( width, height );
+
+    container.appendChild( renderer.domElement );
+
+    projector = new THREE.Projector();
+    mouseVector = new THREE.Vector3();
+    offset = new THREE.Vector3();
+}
+Scene.prototype.init = function init(){
+
+
+    controls = new Trackball( camera, container );
     controls.addEventListener( 'change', render );
-
-
-    geom = new THREE.BoxGeometry( 5, 5, 5 );
-
-    cubes = new THREE.Object3D();
-    scene.add( cubes );
-
-    for(var i = 0; i < 1; i++ ) {
-        addCube();
-    }
 
     plane = new THREE.Mesh(
         new THREE.PlaneGeometry( 2000, 2000, 8, 8 ),
@@ -114,30 +55,38 @@ function init(){
     plane.visible = false;
     scene.add( plane );
 
-    axes = buildAxes();
+    var axes = buildAxes();
     scene.add(axes);
 
-   // scene.add(mesh);
-    projector = new THREE.Projector();
-    mouseVector = new THREE.Vector3();
-    offset = new THREE.Vector3(),
+
+    bindEvents();
 
 
-    stats = new Stats();
-    stats.domElement.style.position = 'absolute';
-    stats.domElement.style.top = '0px';
-    container.appendChild( stats.domElement );
+    window.addEventListener( 'resize', onWindowResize, false );
 
-    renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize( widthC, heightC );
-    elem.appendChild( renderer.domElement );
+};
+
+
+function bindEvents(){
     renderer.domElement.addEventListener( 'mousemove', onMouseMove, false );
     renderer.domElement.addEventListener( 'mousedown', onMouseDown, false );
     renderer.domElement.addEventListener( 'mouseup', onMouseUp, false );
-    window.addEventListener( 'resize', onWindowResize, false );
 
 }
-function addCube(){
+
+
+Scene.prototype.addObjectsToScene = function addObjectsToScene(){
+    geom = new THREE.BoxGeometry( 5, 5, 5 );
+
+    cubes = new THREE.Object3D();
+    scene.add( cubes );
+
+    for(var i = 0; i < 1; i++ ) {
+        this.addCube();
+    }
+};
+
+Scene.prototype.addCube = function addCube(){
     var grayness = Math.random() * 0.5 + 0.25,
         mat = new THREE.MeshBasicMaterial(),
         cube = new THREE.Mesh( geom, mat );
@@ -147,12 +96,105 @@ function addCube(){
     //cube.rotation.set( Math.random(), Math.random(), Math.random() );
     cube.grayness = grayness; // *** NOTE THIS
     cubes.add( cube );
+};
+
+
+
+function buildAxis( src, dst, colorHex, dashed ) {
+    var geom = new THREE.Geometry(),
+        mat;
+
+    if(dashed) {
+        mat = new THREE.LineDashedMaterial({ linewidth: 1, color: colorHex, dashSize: 5, gapSize: 5 });
+    } else {
+        mat = new THREE.LineBasicMaterial({ linewidth: 1, color: colorHex });
+    }
+
+    geom.vertices.push( src.clone() );
+    geom.vertices.push( dst.clone() );
+
+    var axis = new THREE.Line( geom, mat );
+
+    return axis;
+
+}
+
+function buildAxes() {
+    var axes = new THREE.Object3D();
+
+    axes.add( buildAxis( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 100, 0, 0 ), 0xFF0000, false ) ); // +X
+    axes.add( buildAxis( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( -100, 0, 0 ), 0x800000, true) ); // -X
+    axes.add( buildAxis( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 0, 100, 0 ), 0x00FF00, false ) ); // +Y
+    axes.add( buildAxis( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 0, -100, 0 ), 0x008000, true ) ); // -Y
+    axes.add( buildAxis( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 0, 0, 100 ), 0x0000FF, false ) ); // +Z
+    axes.add( buildAxis( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 0, 0, -100 ), 0x000080, true ) ); // -Z
+
+    return axes;
+
+}
+
+Scene.prototype.animate = function animate(){
+    controls.update(clock.getDelta());
+    requestAnimationFrame( animate );
+    render();
+
+    stats.update();
+
+};
+
+
+function render(){
+    renderer.render(scene,camera);
+}
+
+
+/* EVENTS */
+function onWindowResize() {
+
+    camera.aspect =width / height;
+    camera.updateProjectionMatrix();
+    renderer.setSize(width, height);
+
+}
+
+
+/*DEPLACEMENTS*/
+
+function onMouseDown(event) {
+    event.preventDefault();
+    mouseVector.x = 2 * (event.clientX / width) - 1;
+    mouseVector.y = 1 - 2 * (event.clientY / height );
+    var raycaster = projector.pickingRay(mouseVector.clone(), camera);
+    var intersects = raycaster.intersectObjects(cubes.children);
+    if (intersects.length > 0) {
+        controls.enabled = false;
+        if (event.button == 0) { //left click
+
+            SELECTED = intersects[ 0 ].object;
+
+            var intersects = raycaster.intersectObject(plane);
+            offset.copy(intersects[ 0 ].point).sub(plane.position);
+
+            container.style.cursor = 'move';
+
+
+        } else if (event.button == 2) {//right click
+            if(conn){
+                conn.send(
+                    JSON.stringify({"action":"removeCube","id":intersects[ 0 ].object.id})
+                );
+            }
+            removeCube(intersects[ 0 ].object);
+
+            //render();
+        }
+    }
 }
 
 
 function onMouseMove(e){
-    mouseVector.x = 2 * (e.clientX / widthC) - 1;
-    mouseVector.y = 1 - 2 * ( e.clientY / heightC );
+    mouseVector.x = 2 * (e.clientX / width) - 1;
+    mouseVector.y = 1 - 2 * ( e.clientY / height );
     var raycaster = projector.pickingRay( mouseVector.clone(), camera );
 
     cubes.children.forEach(function( cube ) {
@@ -199,48 +241,6 @@ function onMouseMove(e){
 }
 
 
-function onMouseDown(event) {
-    event.preventDefault();
-    mouseVector.x = 2 * (event.clientX / widthC) - 1;
-    mouseVector.y = 1 - 2 * (event.clientY / heightC );
-    var raycaster = projector.pickingRay(mouseVector.clone(), camera);
-    var intersects = raycaster.intersectObjects(cubes.children);
-    if (intersects.length > 0) {
-        controls.enabled = false;
-        if (event.button == 0) { //left click
-
-            SELECTED = intersects[ 0 ].object;
-
-            var intersects = raycaster.intersectObject(plane);
-            offset.copy(intersects[ 0 ].point).sub(plane.position);
-
-            elem.style.cursor = 'move';
-
-
-        } else if (event.button == 2) {//right click
-            if(conn){
-                var action=JSON.stringify({"action":"removeCube","id":intersects[ 0 ].object.id});
-
-                conn.send(
-                    action
-                    //"id":JSON.stringify(intersects[ 0 ].object.id)
-
-                );
-            }
-
-            removeCube(intersects[ 0 ].object);
-
-            render();
-        }
-    }
-}
-
-
-function removeCube(object){
-    cubes.remove(object);
-}
-
-
 function onMouseUp(event){
     event.preventDefault();
 
@@ -254,90 +254,99 @@ function onMouseUp(event){
 
     }
 
-    elem.style.cursor = 'auto';
+    container.style.cursor = 'auto';
 
 }
 
 
-function buildAxes() {
-    var axes = new THREE.Object3D();
+module.exports = Scene;
+},{"three":17,"three.trackball":16}],2:[function(require,module,exports){
+/**
+ * Created by caroline on 03/11/14.
+ */
+"use strict";
 
-    axes.add( buildAxis( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 100, 0, 0 ), 0xFF0000, false ) ); // +X
-    axes.add( buildAxis( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( -100, 0, 0 ), 0x800000, true) ); // -X
-    axes.add( buildAxis( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 0, 100, 0 ), 0x00FF00, false ) ); // +Y
-    axes.add( buildAxis( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 0, -100, 0 ), 0x008000, true ) ); // -Y
-    axes.add( buildAxis( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 0, 0, 100 ), 0x0000FF, false ) ); // +Z
-    axes.add( buildAxis( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 0, 0, -100 ), 0x000080, true ) ); // -Z
+var Peer = require ("peerjs");
+var conn;
+function User(elem){
+    this.peer = new Peer({host: window.location.hostname, port: 9000, path: '/myapp'});
+    this.scene = null;
+    this.id=null;
+    this.peers = [];
+    var that=this;
+    this.peer.on('open', function(id){
 
-    return axes;
-
-}
-
-function buildAxis( src, dst, colorHex, dashed ) {
-    var geom = new THREE.Geometry(),
-        mat;
-
-    if(dashed) {
-        mat = new THREE.LineDashedMaterial({ linewidth: 1, color: colorHex, dashSize: 5, gapSize: 5 });
-    } else {
-        mat = new THREE.LineBasicMaterial({ linewidth: 1, color: colorHex });
-    }
-
-    geom.vertices.push( src.clone() );
-    geom.vertices.push( dst.clone() );
-
-    var axis = new THREE.Line( geom, mat );
-
-    return axis;
-
-}
-
-function onWindowResize() {
-    widthC= elem.offsetWidth;
-    heightC = elem.offsetHeight;
-    camera.aspect =widthC /heightC;
-    camera.updateProjectionMatrix();
-    renderer.setSize(widthC, heightC);
-
-}
-
-function importScene(){
-
-}
-function exportScene(){
-
-}
-
-function animate(){
-    controls.update(clock.getDelta());
-    requestAnimationFrame( animate );
-    render();
-
-    stats.update();
-
-}
-
-function render(){
-    renderer.render(scene, camera);
+        that.id=id;
+        that.displayId(elem);
+    });
+    this.peer.on("connection",connect);
 }
 
 
-function connectToPeer(){
 
-    var c= peer.connect(document.querySelector('#pid2').value);
+User.prototype.sendHello =function sendHello(){
+    conn.send("hello world");
+};
+
+function connect(c){
+    conn = c;
+    conn.on('data', function(data) {
+        // Append the data to body.
+        console.log(data);
+        //var json=JSON.parse(data);
+
+        document.querySelector('#helloworld').appendChild(document.createTextNode(data));
+    });
+
+    conn.on('close', function(err){ console.log(conn.peer + ' has left the chat.') });
+}
+
+
+User.prototype.connectToPeer = function connectToPeer(){
+    var c= this.peer.connect(document.querySelector('#pid2').value);
     c.on('open', function(){
         connect(c);
     });
     c.on('error', function(err){ alert(err) });
+};
+
+User.prototype.setScene = function setScene(scene){
+    this.scene=scene;
+};
+User.prototype.displayId = function displayId(elem){
+    elem.value = this.id;
+};
 
 
-}
-function sendHello(){
-    conn.send("hello world");
-}
+module.exports = User;
+},{"peerjs":8}],3:[function(require,module,exports){
+"use strict";
+var Scene = require("./Scene");
+var User = require("./User");
+document.addEventListener("DOMContentLoaded",function(event) {
+    var s = new Scene(document.querySelector("#container"));
+    var u = new User(document.querySelector("#pid"));
+    document.querySelector("#addCube").addEventListener("click", function () {
+        s.addCube();
+        if (u.conn) {
+             u.conn.send(
+             JSON.stringify({"action": "addCube"})
+             );
+        }
+    }, false);
+
+    document.querySelector("#connect").addEventListener("click", function(){u.connectToPeer();}, false);
+    document.querySelector("#sendButton").addEventListener("click", u.sendHello, false);
+    s.init();
+    s.animate();
+    s.addObjectsToScene();
+    u.setScene(s);
+
+});
+
 
 module.exports;
-},{"peerjs":6,"three":15,"three.trackball":14}],2:[function(require,module,exports){
+},{"./Scene":1,"./User":2}],4:[function(require,module,exports){
 module.exports.RTCSessionDescription = window.RTCSessionDescription ||
 	window.mozRTCSessionDescription;
 module.exports.RTCPeerConnection = window.RTCPeerConnection ||
@@ -345,7 +354,7 @@ module.exports.RTCPeerConnection = window.RTCPeerConnection ||
 module.exports.RTCIceCandidate = window.RTCIceCandidate ||
 	window.mozRTCIceCandidate;
 
-},{}],3:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 var util = require('./util');
 var EventEmitter = require('eventemitter3');
 var Negotiator = require('./negotiator');
@@ -614,7 +623,7 @@ DataConnection.prototype.handleMessage = function(message) {
 
 module.exports = DataConnection;
 
-},{"./negotiator":5,"./util":8,"eventemitter3":9,"reliable":12}],4:[function(require,module,exports){
+},{"./negotiator":7,"./util":10,"eventemitter3":11,"reliable":14}],6:[function(require,module,exports){
 var util = require('./util');
 var EventEmitter = require('eventemitter3');
 var Negotiator = require('./negotiator');
@@ -711,7 +720,7 @@ MediaConnection.prototype.close = function() {
 
 module.exports = MediaConnection;
 
-},{"./negotiator":5,"./util":8,"eventemitter3":9}],5:[function(require,module,exports){
+},{"./negotiator":7,"./util":10,"eventemitter3":11}],7:[function(require,module,exports){
 var util = require('./util');
 var RTCPeerConnection = require('./adapter').RTCPeerConnection;
 var RTCSessionDescription = require('./adapter').RTCSessionDescription;
@@ -1022,7 +1031,7 @@ Negotiator.handleCandidate = function(connection, ice) {
 
 module.exports = Negotiator;
 
-},{"./adapter":2,"./util":8}],6:[function(require,module,exports){
+},{"./adapter":4,"./util":10}],8:[function(require,module,exports){
 var util = require('./util');
 var EventEmitter = require('eventemitter3');
 var Socket = require('./socket');
@@ -1521,7 +1530,7 @@ Peer.prototype.listAllPeers = function(cb) {
 
 module.exports = Peer;
 
-},{"./dataconnection":3,"./mediaconnection":4,"./socket":7,"./util":8,"eventemitter3":9}],7:[function(require,module,exports){
+},{"./dataconnection":5,"./mediaconnection":6,"./socket":9,"./util":10,"eventemitter3":11}],9:[function(require,module,exports){
 var util = require('./util');
 var EventEmitter = require('eventemitter3');
 
@@ -1737,7 +1746,7 @@ Socket.prototype.close = function() {
 
 module.exports = Socket;
 
-},{"./util":8,"eventemitter3":9}],8:[function(require,module,exports){
+},{"./util":10,"eventemitter3":11}],10:[function(require,module,exports){
 var defaultConfig = {'iceServers': [{ 'url': 'stun:stun.l.google.com:19302' }]};
 var dataCount = 1;
 
@@ -2053,7 +2062,7 @@ var util = {
 
 module.exports = util;
 
-},{"./adapter":2,"js-binarypack":10}],9:[function(require,module,exports){
+},{"./adapter":4,"js-binarypack":12}],11:[function(require,module,exports){
 'use strict';
 
 /**
@@ -2259,7 +2268,7 @@ if ('object' === typeof module && module.exports) {
   module.exports = EventEmitter;
 }
 
-},{}],10:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 var BufferBuilder = require('./bufferbuilder').BufferBuilder;
 var binaryFeatures = require('./bufferbuilder').binaryFeatures;
 
@@ -2780,7 +2789,7 @@ function utf8Length(str){
   }
 }
 
-},{"./bufferbuilder":11}],11:[function(require,module,exports){
+},{"./bufferbuilder":13}],13:[function(require,module,exports){
 var binaryFeatures = {};
 binaryFeatures.useBlobBuilder = (function(){
   try {
@@ -2846,7 +2855,7 @@ BufferBuilder.prototype.getBuffer = function() {
 
 module.exports.BufferBuilder = BufferBuilder;
 
-},{}],12:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 var util = require('./util');
 
 /**
@@ -3166,7 +3175,7 @@ Reliable.prototype.onmessage = function(msg) {};
 
 module.exports.Reliable = Reliable;
 
-},{"./util":13}],13:[function(require,module,exports){
+},{"./util":15}],15:[function(require,module,exports){
 var BinaryPack = require('js-binarypack');
 
 var util = {
@@ -3263,7 +3272,7 @@ var util = {
 
 module.exports = util;
 
-},{"js-binarypack":10}],14:[function(require,module,exports){
+},{"js-binarypack":12}],16:[function(require,module,exports){
 /**
  * @author Eberhard Graether / http://egraether.com/
  * @author Mark Lundin / http://mark-lundin.com
@@ -3882,7 +3891,7 @@ function preventEvent( event ) { event.preventDefault(); }
 
 Trackball.prototype = Object.create(THREE.EventDispatcher.prototype);
 
-},{"three":15}],15:[function(require,module,exports){
+},{"three":17}],17:[function(require,module,exports){
 var self = self || {};// File:src/Three.js
 
 /**
@@ -39739,4 +39748,4 @@ if (typeof exports !== 'undefined') {
   this['THREE'] = THREE;
 }
 
-},{}]},{},[1]);
+},{}]},{},[1,2,3]);

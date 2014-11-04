@@ -1,45 +1,51 @@
-
 "use strict";
 
 var THREE=require ('three');
 var Trackball = require('three.trackball');
 var clock = new THREE.Clock();
-var scene, camera,controls, renderer;
-var geom , cubes;
 
-var projector, mouseVector, offset;
 
 var range = 50;
-var mesh;
-
-var elem,widthC,heightC,stats ;
-
+var controls,stats;
+var cubes,geom;
+var renderer,scene,camera;
+var mouseVector,projector,offset;
+var width, height,container;
 var SELECTED,INTERSECTED, plane;
-function Scene(){
-
-    this.camera = null ;
-    this.scene = null ;
-    this.renderer= null ;
-    this.projector= null ;
-    this.mouseVector= null ;
 
 
+function Scene(containerElem){
+    stats = new Stats();
+    stats.domElement.style.position = 'absolute';
+    stats.domElement.style.top = '0px';
 
 
+    container = containerElem ;
+    container.appendChild( stats.domElement );
+    width =container.offsetWidth;
+    height =container.offsetHeight;
+
+    scene = new THREE.Scene();
+
+    camera = new THREE.PerspectiveCamera( 45,width / height, 1, 100000 );
+    camera.position.set( 0, 0, range * 2 );
+    camera.lookAt( new THREE.Vector3( 0, 0, 0 ) );
+
+
+    renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize( width, height );
+
+    container.appendChild( renderer.domElement );
+
+    projector = new THREE.Projector();
+    mouseVector = new THREE.Vector3();
+    offset = new THREE.Vector3();
 }
-function init(){
+Scene.prototype.init = function init(){
 
-    this.scene = new THREE.Scene();
 
-    this.camera = new THREE.PerspectiveCamera( 45,widthC /heightC, 1, 100000 );
-    this.camera.position.set( 0, 0, range * 2 );
-    this.camera.lookAt( new THREE.Vector3( 0, 0, 0 ) );
-
-    controls = new Trackball( camera,elem );
+    controls = new Trackball( camera, container );
     controls.addEventListener( 'change', render );
-
-    addObjectsToScene();
-
 
     plane = new THREE.Mesh(
         new THREE.PlaneGeometry( 2000, 2000, 8, 8 ),
@@ -48,41 +54,38 @@ function init(){
     plane.visible = false;
     scene.add( plane );
 
-    axes = buildAxes();
+    var axes = buildAxes();
     scene.add(axes);
 
-    // scene.add(mesh);
-    projector = new THREE.Projector();
-    mouseVector = new THREE.Vector3();
-    offset = new THREE.Vector3();
+
+    bindEvents();
 
 
-    stats = new Stats();
-    stats.domElement.style.position = 'absolute';
-    stats.domElement.style.top = '0px';
-    container.appendChild( stats.domElement );
+    window.addEventListener( 'resize', onWindowResize, false );
 
-    renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize( widthC, heightC );
-    elem.appendChild( renderer.domElement );
+};
+
+
+function bindEvents(){
     renderer.domElement.addEventListener( 'mousemove', onMouseMove, false );
     renderer.domElement.addEventListener( 'mousedown', onMouseDown, false );
     renderer.domElement.addEventListener( 'mouseup', onMouseUp, false );
-    window.addEventListener( 'resize', onWindowResize, false );
 
 }
-function addObjectsToScene(){
-    var geom = new THREE.BoxGeometry( 5, 5, 5 );
+
+
+Scene.prototype.addObjectsToScene = function addObjectsToScene(){
+    geom = new THREE.BoxGeometry( 5, 5, 5 );
 
     cubes = new THREE.Object3D();
     scene.add( cubes );
 
     for(var i = 0; i < 1; i++ ) {
-        addCube(geom);
+        this.addCube();
     }
-}
+};
 
-function addCube(geom){
+Scene.prototype.addCube = function addCube(){
     var grayness = Math.random() * 0.5 + 0.25,
         mat = new THREE.MeshBasicMaterial(),
         cube = new THREE.Mesh( geom, mat );
@@ -92,7 +95,7 @@ function addCube(geom){
     //cube.rotation.set( Math.random(), Math.random(), Math.random() );
     cube.grayness = grayness; // *** NOTE THIS
     cubes.add( cube );
-}
+};
 
 
 
@@ -129,27 +132,27 @@ function buildAxes() {
 
 }
 
-function animate(){
+Scene.prototype.animate = function animate(){
     controls.update(clock.getDelta());
     requestAnimationFrame( animate );
     render();
 
     stats.update();
 
-}
+};
+
 
 function render(){
-    renderer.render(scene, camera);
+    renderer.render(scene,camera);
 }
 
 
 /* EVENTS */
 function onWindowResize() {
-    widthC= elem.offsetWidth;
-    heightC = elem.offsetHeight;
-    camera.aspect =widthC /heightC;
+
+    camera.aspect =width / height;
     camera.updateProjectionMatrix();
-    renderer.setSize(widthC, heightC);
+    renderer.setSize(width, height);
 
 }
 
@@ -158,8 +161,8 @@ function onWindowResize() {
 
 function onMouseDown(event) {
     event.preventDefault();
-    mouseVector.x = 2 * (event.clientX / widthC) - 1;
-    mouseVector.y = 1 - 2 * (event.clientY / heightC );
+    mouseVector.x = 2 * (event.clientX / width) - 1;
+    mouseVector.y = 1 - 2 * (event.clientY / height );
     var raycaster = projector.pickingRay(mouseVector.clone(), camera);
     var intersects = raycaster.intersectObjects(cubes.children);
     if (intersects.length > 0) {
@@ -171,7 +174,7 @@ function onMouseDown(event) {
             var intersects = raycaster.intersectObject(plane);
             offset.copy(intersects[ 0 ].point).sub(plane.position);
 
-            elem.style.cursor = 'move';
+            container.style.cursor = 'move';
 
 
         } else if (event.button == 2) {//right click
@@ -182,15 +185,15 @@ function onMouseDown(event) {
             }
             removeCube(intersects[ 0 ].object);
 
-            render();
+            //render();
         }
     }
 }
 
 
 function onMouseMove(e){
-    mouseVector.x = 2 * (e.clientX / widthC) - 1;
-    mouseVector.y = 1 - 2 * ( e.clientY / heightC );
+    mouseVector.x = 2 * (e.clientX / width) - 1;
+    mouseVector.y = 1 - 2 * ( e.clientY / height );
     var raycaster = projector.pickingRay( mouseVector.clone(), camera );
 
     cubes.children.forEach(function( cube ) {
@@ -250,7 +253,7 @@ function onMouseUp(event){
 
     }
 
-    elem.style.cursor = 'auto';
+    container.style.cursor = 'auto';
 
 }
 
