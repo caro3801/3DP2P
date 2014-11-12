@@ -6,12 +6,13 @@ module.exports = function(grunt) {
         browserify: {
             dist: {
                 files: {
+
                     'public/javascripts/front.js': ['client/*.js']
-                },
-                options: {
-                    browserifyOptions: {
-                        debug: true
-                    }
+                }
+            },
+            options: {
+                bundleOptions: {
+                    debug: true
                 }
             }
         },

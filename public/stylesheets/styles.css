@@ -8025,6 +8025,12 @@ button.close {
   }
 }
 /* line 6, ../sass/styles.scss */
-#container {
-  height: 600px;
+#viewport {
+  height: 300px;
+  width: 100%;
+}
+
+/* line 10, ../sass/styles.scss */
+#toolbar {
+  display: block;
 }

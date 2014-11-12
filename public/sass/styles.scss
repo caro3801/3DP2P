@@ -3,7 +3,10 @@
 @import "bootstrap";
 
 
-#container {
-  height: 600px ;
+#viewport {
+  height: 300px ;
+  width: 100%;
 }
-
+#toolbar{
+  display: block;
+}
