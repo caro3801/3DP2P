@@ -27,6 +27,39 @@ var Editor = function () {
         themeChanged: new SIGNALS.Signal(),
         transformModeChanged: new SIGNALS.Signal(),
         cameraChanged: new SIGNALS.Signal(),
+        cameraSwitched: new SIGNALS.Signal(),
+
+        geometryChanged: new SIGNALS.Signal(),
+
+        objectSelected: new SIGNALS.Signal(),
+        objectFocused: new SIGNALS.Signal(),
+
+        objectAdded: new SIGNALS.Signal(),
+        objectChanged: new SIGNALS.Signal(),
+        objectRemoved: new SIGNALS.Signal(),
+
+        helperAdded: new SIGNALS.Signal(),
+        helperRemoved: new SIGNALS.Signal(),
+        helperChanged: new SIGNALS.Signal(),
+
+        materialChanged: new SIGNALS.Signal(),
+        windowResize: new SIGNALS.Signal(),
+
+        showGridChanged: new SIGNALS.Signal(),
+        gridChanged: new SIGNALS.Signal()
+    };
+    this.signalsP2P = {
+        snapChanged: new SIGNALS.Signal(),
+        spaceChanged: new SIGNALS.Signal(),
+        rendererChanged: new SIGNALS.Signal(),
+        savingStarted: new SIGNALS.Signal(),
+        savingFinished: new SIGNALS.Signal(),
+
+        sceneGraphChanged: new SIGNALS.Signal(),
+
+        themeChanged: new SIGNALS.Signal(),
+        transformModeChanged: new SIGNALS.Signal(),
+        cameraChanged: new SIGNALS.Signal(),
 
         geometryChanged: new SIGNALS.Signal(),
 
@@ -44,10 +77,10 @@ var Editor = function () {
         windowResize: new SIGNALS.Signal(),
 
         showGridChanged: new SIGNALS.Signal(),
-        gridChanged: new SIGNALS.Signal()
-
+        gridChanged: new SIGNALS.Signal(),
+//
+        dropEnded : new SIGNALS.Signal()
     };
-
     this.config = new Config();
     this.storage = new Storage();
     this.loader = new Loader( this );
@@ -66,11 +99,10 @@ var Editor = function () {
     this.selected = null;
     this.helpers = {};
 
-};Editor.prototype = {
+};
 
+Editor.prototype = {
 
-
-    //
 
     setScene: function ( scene ) {
 
@@ -108,7 +140,6 @@ var Editor = function () {
         } );
 
         this.scene.add( object );
-
         this.signals.objectAdded.dispatch( object );
         this.signals.sceneGraphChanged.dispatch();
 
@@ -125,7 +156,6 @@ var Editor = function () {
 
         if ( object.parent === undefined ) return; // avoid deleting the camera or scene
 
-        if ( confirm( 'Delete ' + object.name + '?' ) === false ) return;
 
         var scope = this;
 
@@ -141,7 +171,6 @@ var Editor = function () {
         this.signals.sceneGraphChanged.dispatch();
 
     },
-
     addGeometry: function ( geometry ) {
 
         this.geometries[ geometry.uuid ] = geometry;
@@ -187,7 +216,7 @@ var Editor = function () {
 
             if ( object instanceof THREE.Camera ) {
 
-                helper = new THREE.CameraHelper( object, 10 );
+                helper = new THREE.CameraHelper( object );
 
             } else if ( object instanceof THREE.PointLight ) {
 
@@ -264,7 +293,23 @@ var Editor = function () {
     },
 
     //
+    get: function ( object ) {
 
+        if ( this.current === object ) return;
+
+        var uuid = null;
+
+        if ( object !== null ) {
+
+            uuid = object.uuid;
+
+        }
+
+        this.current = object;
+
+        this.config.setKey( 'current', uuid );
+
+    },
     select: function ( object ) {
 
         if ( this.selected === object ) return;
@@ -289,6 +334,36 @@ var Editor = function () {
         this.select( this.scene.getObjectById( id, true ) );
 
     },
+    getHelperByUuid: function ( uuid ) {
+
+        var scope = this;
+
+        this.sceneHelpers.traverse( function ( child ) {
+
+            if ( child.uuid === uuid ) {
+
+                scope.get(child) ;
+            }else if (child.camera && child.camera.uuid === uuid){
+                scope.get(child) ;
+            }
+
+        } );
+
+    },
+    getByUuid: function ( uuid ) {
+
+        var scope = this;
+
+        this.scene.traverse( function ( child ) {
+
+            if ( child.uuid === uuid ) {
+
+                scope.get(child) ;
+            }
+
+        } );
+
+    },
 
     selectByUuid: function ( uuid ) {
 
@@ -299,7 +374,6 @@ var Editor = function () {
             if ( child.uuid === uuid ) {
 
                 scope.select( child );
-
             }
 
         } );

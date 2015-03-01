@@ -2,7 +2,7 @@ module.exports = function(grunt) {
 
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
-        srcFile:'client/**/*.js',
+        srcFile:'client/*.js',
         browserify: {
             dist: {
                 files: {

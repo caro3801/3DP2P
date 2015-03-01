@@ -8,6 +8,7 @@ require ('../controls/TransformControls');
 var Viewport = function ( editor ) {
 
 	var signals = editor.signals;
+	var signalsP2P = editor.signalsP2P;
 
 	var container = document.createElement('div');
 	container.id='viewport';
@@ -19,6 +20,7 @@ var Viewport = function ( editor ) {
 	var sceneHelpers = editor.sceneHelpers;
 
 	var objects = [];
+	var i=0;
 
 	// helpers
 	var size =500, step=25;
@@ -45,7 +47,6 @@ var Viewport = function ( editor ) {
 	transformControls.addEventListener( 'change', function () {
 
 		var object = transformControls.object;
-
 		if ( object !== undefined ) {
 
 			if ( editor.helpers[ object.id ] !== undefined ) {
@@ -53,20 +54,21 @@ var Viewport = function ( editor ) {
 				editor.helpers[ object.id ].update();
 
 			}
-
 		}
 
 		render();
 
 	} );
+
+
 	transformControls.addEventListener( 'mouseDown', function () {
 
 		controls.enabled = false;
 
 	} );
 	transformControls.addEventListener( 'mouseUp', function () {
-
 		signals.objectChanged.dispatch( transformControls.object );
+		editor.signalsP2P.objectChanged.dispatch( editor.selected  );
 		controls.enabled = true;
 
 	} );
@@ -122,15 +124,21 @@ var Viewport = function ( editor ) {
 
 					editor.select( object.userData.object );
 
+					editor.signalsP2P.objectSelected.dispatch(object.userData.object);
+
 				} else {
 
 					editor.select( object );
+					editor.signalsP2P.objectSelected.dispatch(object);
 
 				}
 
 			} else {
 
 				editor.select( null );
+
+				editor.signalsP2P.objectSelected.dispatch(null);
+
 
 			}
 
@@ -198,6 +206,7 @@ var Viewport = function ( editor ) {
 			var intersect = intersects[ 0 ];
 
 			signals.objectFocused.dispatch( intersect.object );
+			signalsP2P.objectFocused.dispatch( intersect.object );
 
 		}
 
@@ -216,6 +225,7 @@ var Viewport = function ( editor ) {
 
 		transformControls.update();
 		signals.cameraChanged.dispatch( camera );
+		signalsP2P.cameraChanged.dispatch( camera );
 
 	} );
 
@@ -294,6 +304,7 @@ var Viewport = function ( editor ) {
 
 	} );
 
+
 	signals.objectSelected.add( function ( object ) {
 
 		selectionBox.visible = false;
@@ -369,6 +380,9 @@ var Viewport = function ( editor ) {
 
 	} );
 
+
+
+
 	signals.objectRemoved.add( function ( object ) {
 
 		var materialsNeedUpdate = false;
@@ -388,6 +402,15 @@ var Viewport = function ( editor ) {
 	signals.helperAdded.add( function ( object ) {
 
 		objects.push( object.getObjectByName( 'picker' ) );
+
+	} );
+	signals.helperChanged.add( function ( id ) {
+		if ( editor.helpers[ id ] !== undefined ) {
+
+			editor.helpers[ id ].update();
+
+		}
+		render();
 
 	} );
 
@@ -530,7 +553,7 @@ var Viewport = function ( editor ) {
 
 	}
 
-	return container;
+	return {container:container,transformControls:transformControls, signals : signals, controls:controls};
 
 };
 module.exports = Viewport;

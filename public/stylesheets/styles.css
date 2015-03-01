@@ -8026,11 +8026,18 @@ button.close {
 }
 /* line 6, ../sass/styles.scss */
 #viewport {
-  height: 300px;
+  height: 200px;
   width: 100%;
 }
 
 /* line 10, ../sass/styles.scss */
 #toolbar {
   display: block;
+}
+
+/* line 13, ../sass/styles.scss */
+#peers {
+  float: right;
+  margin-right: 0px;
+  height: 20px;
 }

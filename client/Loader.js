@@ -209,9 +209,12 @@ var Loader = function ( editor ) {
 
 					editor.addObject( object );
 					editor.select( object );
+					editor.signalsP2P.dropEnded.dispatch(object);
 
 				}, false );
 				reader.readAsText( file );
+
+
 
 				break;
 
@@ -341,6 +344,7 @@ var Loader = function ( editor ) {
 				break;
 
 		}
+
 
 	}
 

@@ -397,7 +397,7 @@ module.exports;
 
 			var group = {
 				handles: this["handles"],
-				pickers: this["pickers"],
+				pickers: this["pickers"]
 			};
 
 			var tempMatrix = new THREE.Matrix4();
@@ -543,7 +543,7 @@ module.exports;
 		THREE.Object3D.call( this );
 
 		domElement = ( domElement !== undefined ) ? domElement : document;
-
+		this.domElement = domElement;
 		this.gizmo = {};
 		this.gizmo["translate"] = new THREE.TransformGizmoTranslate();
 		this.gizmo["rotate"] = new THREE.TransformGizmoRotate();
@@ -960,6 +960,8 @@ module.exports;
 			scope.dispatchEvent( objectChangeEvent );
 
 		}
+
+
 
 		function onPointerUp( event ) {
 

@@ -9,10 +9,10 @@ document.addEventListener("DOMContentLoaded",function(event) {
     var editor = new Editor();
     var viewport = new Viewport(editor);
     var toolbar = new Toolbar(editor);
-    var user = new User(viewport);
+    var user = new User(editor,viewport,toolbar);
 
     document.body.appendChild(toolbar);
-    document.body.appendChild(viewport);
+    document.body.appendChild(viewport.container);
 
     editor.storage.init(function () {
         editor.storage.get(function (state) {
@@ -46,14 +46,15 @@ document.addEventListener("DOMContentLoaded",function(event) {
         };
 
         var signals = editor.signals;
-        signals.geometryChanged.add(saveState);
+        /*signals.geometryChanged.add(saveState);
         signals.objectAdded.add(saveState);
         signals.objectChanged.add(saveState);
         signals.objectRemoved.add(saveState);
         signals.materialChanged.add(saveState);
         signals.sceneGraphChanged.add(saveState);
-
+*/
         editor.signals.themeChanged.dispatch();
+
         document.addEventListener('dragover', function (event) {
             event.preventDefault();
             event.dataTransfer.dropEffect = 'copy';
@@ -62,6 +63,7 @@ document.addEventListener("DOMContentLoaded",function(event) {
         document.addEventListener('drop', function (event) {
             event.preventDefault();
             editor.loader.loadFile(event.dataTransfer.files[0]);
+
         }, false);
 
         document.addEventListener('keydown', function (event) {
@@ -71,9 +73,16 @@ document.addEventListener("DOMContentLoaded",function(event) {
                     break;
                 case 46: // delete
                     var parent = editor.selected.parent;
-                    editor.removeObject(editor.selected);
-                    editor.select(parent);
+                    if ( confirm( 'Delete ' + editor.selected.name + '?' ) === true ){
+                        editor.removeObject(editor.selected);
+                        editor.signalsP2P.objectRemoved.dispatch(editor.selected);
+                        editor.select(parent);
+                    }
                     break;
+
+                case 83: //s for Switching camera
+                    user.peer.editor.signals.cameraSwitched.dispatch(editor.camera);
+                break;
             }
         }, false);
 
@@ -85,10 +94,12 @@ document.addEventListener("DOMContentLoaded",function(event) {
 
     });
 
+
     var elem=document.querySelector('#pid2');
-    elem.addEventListener('change',function(event){
+    elem.addEventListener('click',function(event){
         event.preventDefault();
         user.connectToPeer(event.target.value);
+
 
     },false);
 

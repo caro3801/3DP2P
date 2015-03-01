@@ -4,9 +4,15 @@
 
 
 #viewport {
-  height: 300px ;
+  height: 200px ;
   width: 100%;
 }
 #toolbar{
   display: block;
+}
+#peers{
+
+  float :right;
+  margin-right: 0px;
+  height: 20px;
 }

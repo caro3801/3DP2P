@@ -1,5 +1,5 @@
 /**
- * Created by caroline on 02/07/2014.
+ * Created by Tigrou on 02/07/2014.
  */
 function XHR(xhr) {
     this.successCallBack = null;
