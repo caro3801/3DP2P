@@ -5,11 +5,7 @@
 var THREE = require('three');
 var Peer = require("peerjs");
 var XHR = require("./XHR");
-var signals = require('signals');
-var conn;
-var connectedPeers = {};
 var camerasId = {};
-var eventMove = new Event('mousemove');
 function User(editor, viewport, toolbar) {
     this.peers = {};
     this.peer = new Peer({host: window.location.hostname, port: 9000, path: '/myapp'});
@@ -104,7 +100,23 @@ User.prototype.listen = function (peerId) {
                 break;
             case 'cameraChanged':
                 if (result instanceof THREE.Camera) {
-                    var cam = camerasId[result.uuid];
+                    if(camerasId[this.peer]){
+                        //update camera
+                        that.peer.editor.getByUuid(result.uuid);
+                        that.peer.editor.current.position.copy(result.position);
+                        that.peer.editor.current.rotation.copy(result.rotation);
+                        that.peer.editor.signals.objectChanged.dispatch(that.peer.editor.current);
+
+                    }else {
+                       // add camera
+                        camerasId[this.peer] = result;
+                        result.near = 0.01;
+                        result.far = 1;
+                        result.aspect = 4 / 3;
+                        result.updateProjectionMatrix();
+                        that.peer.editor.addObject(result);
+                    }
+                    /*var cam = camerasId[result.uuid];
 
                     if (cam) {
 
@@ -123,7 +135,7 @@ User.prototype.listen = function (peerId) {
                         result.updateProjectionMatrix();
                         that.peer.editor.addObject(result);
 
-                    }
+                    }*/
                 }
 
                 break;
@@ -142,6 +154,8 @@ User.prototype.listen = function (peerId) {
 
     this.peers[peerId].on('close', function (err) {
         console.log(peerId + ' has left.');
+
+        that.peer.editor.removeObject(camerasId[peerId]);
         delete that.peers[peerId];
     });
 
@@ -158,7 +172,6 @@ User.prototype.sendDataOnEachConnexion = function (data) {
 };
 
 User.prototype.addSendToSignal = function () {
-    var signals = this.peer.editor.signalsP2P;
     var that = this;
 
 
