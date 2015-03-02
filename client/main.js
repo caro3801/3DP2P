@@ -46,13 +46,13 @@ document.addEventListener("DOMContentLoaded",function(event) {
         };
 
         var signals = editor.signals;
-        /*signals.geometryChanged.add(saveState);
+        signals.geometryChanged.add(saveState);
         signals.objectAdded.add(saveState);
         signals.objectChanged.add(saveState);
         signals.objectRemoved.add(saveState);
         signals.materialChanged.add(saveState);
         signals.sceneGraphChanged.add(saveState);
-*/
+
         editor.signals.themeChanged.dispatch();
 
         document.addEventListener('dragover', function (event) {
@@ -94,14 +94,15 @@ document.addEventListener("DOMContentLoaded",function(event) {
 
     });
 
-
+    document.querySelector("#browser").innerHTML=navigator.userAgent;
     var elem=document.querySelector('#pid2');
-    elem.addEventListener('click',function(event){
-        event.preventDefault();
-        user.connectToPeer(event.target.value);
 
-
-    },false);
+    elem.addEventListener('keydown',function(event){
+        if(event.keyCode == 13) {
+            event.preventDefault();
+            user.connect(event.target.value);
+        }
+    },true);
 
 
 });
