@@ -121,23 +121,27 @@ var Viewport = function ( editor ) {
 				if ( object.userData.object !== undefined ) {
 
 					// helper
+                    if (!object.locked){
 
-					editor.select( object.userData.object );
-
-					editor.signalsP2P.objectSelected.dispatch(object.userData.object);
+                        editor.select( object.userData.object );
+                        editor.signalsP2P.objectLocked.dispatch(object.userData.object);
+                        //editor.signalsP2P.objectSelected.dispatch(object.userData.object);
+                    }
 
 				} else {
+                    if (!object.locked) {
 
-					editor.select( object );
-					editor.signalsP2P.objectSelected.dispatch(object);
-
+                        editor.select(object);
+                        editor.signalsP2P.objectLocked.dispatch(object);
+                        //editor.signalsP2P.objectSelected.dispatch(object);
+                    }
 				}
 
 			} else {
 
+                var unselected = editor.selected;
 				editor.select( null );
-
-				editor.signalsP2P.objectSelected.dispatch(null);
+                editor.signalsP2P.objectUnlocked.dispatch(unselected);
 
 
 			}
@@ -332,6 +336,45 @@ var Viewport = function ( editor ) {
 
 	} );
 
+    signals.objectLocked.add( function ( object ) {
+
+        selectionBox.visible = false;
+        transformControls.detach();
+        if ( object !== null ) {
+
+            if ( object.geometry !== undefined &&
+                object instanceof THREE.Sprite === false ) {
+                selectionBox.update( object );
+                //add material
+                var cylBleu = new THREE.MeshNormalMaterial( { transparent: true, opacity: 0.5 } );
+                object.addMaterial(cylBleu);
+            }
+
+        }
+
+        render();
+
+    } );
+
+    signals.objectUnlocked.add( function ( object ) {
+
+        selectionBox.visible = false;
+        transformControls.detach();
+        if ( object !== null ) {
+
+            if ( object.geometry !== undefined &&
+                object instanceof THREE.Sprite === false ) {
+                selectionBox.update( object );
+                //add material
+                delete object.material.splice[0,object.material.length-1];
+                object.addMaterial(cylBleu);
+            }
+
+        }
+
+        render();
+
+    } );
 	signals.objectFocused.add( function ( object ) {
 
 		controls.focus( object );

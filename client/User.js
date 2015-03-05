@@ -82,6 +82,12 @@ User.prototype.listen = function (peerId) {
             case 'objectSelected':
                 result != null ? that.peer.editor.selectByUuid(result.uuid) : that.peer.editor.deselect();
                 break;
+            case 'objectLocked':
+                that.peer.editor.lock(result);
+                break;
+            case 'objectUnlocked':
+                that.peer.editor.unlock(result);
+                break;
             case 'objectFocused':
                 that.peer.editor.focus(result);
 
@@ -156,6 +162,7 @@ User.prototype.listen = function (peerId) {
         console.log(peerId + ' has left.');
 
         that.peer.editor.removeObject(camerasId[peerId]);
+        delete camerasId[peerId];
         delete that.peers[peerId];
     });
 
@@ -208,6 +215,16 @@ User.prototype.addSendToSignal = function () {
 
     this.peer.editor.signalsP2P.objectSelected.add(function (object) {
         var data = {type: 'objectSelected', message: object === null ? null : object.toJSON()};
+        that.sendDataOnEachConnexion(data);
+    });
+
+    this.peer.editor.signalsP2P.objectLocked.add(function (object) {
+        var data = {type: 'objectLocked', message: object.toJSON()};
+        that.sendDataOnEachConnexion(data);
+    });
+
+    this.peer.editor.signalsP2P.objectUnlocked.add(function (object) {
+        var data = {type: 'objectUnlocked', message: object.toJSON()};
         that.sendDataOnEachConnexion(data);
     });
 

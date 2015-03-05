@@ -32,6 +32,8 @@ var Editor = function () {
         geometryChanged: new SIGNALS.Signal(),
 
         objectSelected: new SIGNALS.Signal(),
+        objectLocked: new SIGNALS.Signal(),
+        objectUnlocked: new SIGNALS.Signal(),
         objectFocused: new SIGNALS.Signal(),
 
         objectAdded: new SIGNALS.Signal(),
@@ -64,6 +66,8 @@ var Editor = function () {
         geometryChanged: new SIGNALS.Signal(),
 
         objectSelected: new SIGNALS.Signal(),
+        objectLocked: new SIGNALS.Signal(),
+        objectUnlocked: new SIGNALS.Signal(),
         objectFocused: new SIGNALS.Signal(),
 
         objectAdded: new SIGNALS.Signal(),
@@ -328,6 +332,27 @@ Editor.prototype = {
         this.signals.objectSelected.dispatch( object );
 
     },
+    lock: function ( object ) {
+        this.getByUuid(object.uuid);
+
+        if (this.current.locked ) return;
+
+        this.current.locked = true;
+
+        this.signals.objectLocked.dispatch( this.current );
+
+    },
+
+    unlock: function (object) {
+
+        this.getByUuid(object.uuid);
+        if ( !this.current.locked ) return;
+
+        this.current.locked = false;
+
+        this.signals.objectUnlocked.dispatch( this.current );
+
+    },
 
     selectById: function ( id ) {
 
@@ -385,7 +410,6 @@ Editor.prototype = {
         this.select( null );
 
     },
-
     focus: function ( object ) {
 
         this.signals.objectFocused.dispatch( object );
