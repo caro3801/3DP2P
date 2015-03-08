@@ -257,7 +257,7 @@ User.prototype.addSendToSignal = function () {
 			}
 		};
 		var data = {type: 'objectChanged', message: message};
-		var data2 = {type: 'objectChanged', message: {uuid:object.uuid,object:object.toJSON()}};
+		var data2 = {type: 'objectChanged', message: {uuid:object.parent.uuid,object:object.parent.toJSON()}};
 		that.sendDataOnEachConnexion(data);
 		sceneStore.sendToServer(sceneId,data2);
 

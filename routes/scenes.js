@@ -12,20 +12,22 @@ router.get('/', function(req, res) {
 	//bdScene.getAll();
 	res.status(200).end();
 });
-
 //create scene
 router.post('/', function(req, res) {
 	//bdScene.create();
 	res.status(200).end();
 });
 
+*/
 //get sceneId
 router.get('/:sceneId', function(req, res) {
 	var sceneId=req.params.sceneId;
-	//bdScene.get(sceneId);
-	res.status(200).end();
-});
+	bdScene.get(sceneId,function(err,results){
+		res.json(results);
 
+	});
+});
+/*
 //update sceneId
 router.put('/:sceneId', function(req, res) {
 	var sceneId=req.params.sceneId;

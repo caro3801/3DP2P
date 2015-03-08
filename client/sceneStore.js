@@ -15,22 +15,21 @@ sceneStore.createScene = function(creatorId,callback){
 	xhr.send(creatorId);
 	var value = JSON.parse(xhr.jsonText);
 	return value;
-};
-sceneStore.get = function(sceneId){
+};*/
+sceneStore.get = function(sceneId,callback){
 	var xhr = new XHR(XHR.createXMLHttpRequest());
-	xhr.get("scene/"+sceneId,true);
-	xhr.addSuccessCallBack(function(){
-		console.log("Scene " + sceneId + "ok");
+	xhr.get("scenes/"+sceneId,true);
+	xhr.addSuccessCallBack(function(a,b,c){
+		callback();
 	});
 	xhr.send(null);
 	var value = JSON.parse(xhr.jsonText);
 	return value;
-
 };
-
+/*
 sceneStore.getAll = function(){
 	var xhr = new XHR(XHR.createXMLHttpRequest());
-	xhr.get("scene/",true);
+	xhr.get("scenes/",true);
 	xhr.addSuccessCallBack(function(){
 		console.log("All scenes ok");
 	});
@@ -41,7 +40,7 @@ sceneStore.getAll = function(){
 };
 sceneStore.update = function(sceneId,values){
 	var xhr = new XHR(XHR.createXMLHttpRequest());
-	xhr.put("scene/"+sceneId+"/update",false);
+	xhr.put("scenes/"+sceneId+"/update",false);
 	xhr.addSuccessCallBack(function(){
 		console.log("Scene " + sceneId + " updated");
 	});
@@ -51,7 +50,7 @@ sceneStore.update = function(sceneId,values){
 };
 sceneStore.remove = function(sceneId,callback){
 	var xhr = new XHR(XHR.createXMLHttpRequest());
-	xhr.delete("scene/"+sceneId+"/delete",true);
+	xhr.delete("scenes/"+sceneId+"/delete",true);
 	xhr.addSuccessCallBack(function(){
 		console.log("Scene " + sceneId + " deleted");
 	});

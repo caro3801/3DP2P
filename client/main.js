@@ -5,6 +5,7 @@ var Editor = require("./Editor");
 var Toolbar = require('./Toolbar');
 var Viewport = require("./Viewport");
 var User = require('./User');
+var sceneStore  = require('./sceneStore');
 document.addEventListener("DOMContentLoaded",function(event) {
     var editor = new Editor();
     var viewport = new Viewport(editor);
@@ -104,6 +105,17 @@ document.addEventListener("DOMContentLoaded",function(event) {
             user.connect(requestedPeer);
         }
     },true);
+
+	var sceneId =document.getElementById("sceneId");
+	sceneId.addEventListener('keydown', function(event){
+		if(event.keyCode == 13) {
+			event.preventDefault();
+			var sceneId = event.target.value;
+			sceneStore.get(sceneId,function(){
+				console.log("it works");
+			});
+		}
+	})
 
 
 });
