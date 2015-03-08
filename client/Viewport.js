@@ -141,7 +141,9 @@ var Viewport = function ( editor ) {
 
                 var unselected = editor.selected;
 				editor.select( null );
-                editor.signalsP2P.objectUnlocked.dispatch(unselected);
+                if (unselected!==null){
+                    editor.signalsP2P.objectUnlocked.dispatch(unselected);
+                }
 
 
 			}

@@ -217,9 +217,12 @@ User.prototype.addSendToSignal = function () {
 	var sceneId=1;
 
     this.peer.editor.signalsP2P.objectAdded.add(function (object) {
-        var data = {type: 'objectAdded', message: {object: object.toJSON()}};
+		var message = {
+			"object": object.toJSON()
+		};
+        var data = {type: 'objectAdded', message: message};
         that.sendDataOnEachConnexion(data);
-		sceneStore.sendToServer('objectAdded',sceneId,data);
+		sceneStore.sendToServer(sceneId,data);
     });
 
     this.peer.editor.signalsP2P.dropEnded.add(function (object) {
@@ -230,7 +233,7 @@ User.prototype.addSendToSignal = function () {
         var data = {type: 'dropEnded', message: message};
 
         that.sendDataOnEachConnexion(data);
-		sceneStore.sendToServer('dropEnded',sceneId,data);
+		sceneStore.sendToServer(sceneId,data);
     });
 
     this.peer.editor.signalsP2P.objectRemoved.add(function (object) {
@@ -241,7 +244,7 @@ User.prototype.addSendToSignal = function () {
         var data = {type: 'objectRemoved', message: message};
         that.sendDataOnEachConnexion(data);
 
-		sceneStore.sendToServer('objectRemoved',sceneId,data);
+		sceneStore.sendToServer(sceneId,data);
     });
 
 	this.peer.editor.signalsP2P.objectChanged.add(function (object) {
@@ -254,8 +257,9 @@ User.prototype.addSendToSignal = function () {
 			}
 		};
 		var data = {type: 'objectChanged', message: message};
+		var data2 = {type: 'objectChanged', message: {uuid:object.uuid,object:object.toJSON()}};
 		that.sendDataOnEachConnexion(data);
-		sceneStore.sendToServer('objectChanged',sceneId,data);
+		sceneStore.sendToServer(sceneId,data2);
 
 	});
 

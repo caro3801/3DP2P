@@ -1,4 +1,4 @@
-var repository = require("./repository");
+var repository = require("./bd/repository");
 var repositoryModifications = {
     'collection': repository.getCollection('scenes'),
     'create': function (scene, callback) {

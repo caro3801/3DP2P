@@ -95,19 +95,20 @@ sceneStore.removeObject = function(sceneId,objectId,callback){
 
 };
 
-sceneStore.sendToServer = function(message,sceneId,values){
-	switch (message) {
+sceneStore.sendToServer = function(sceneId,data){
+
+	switch (data.type) {
 		case 'objectAdded':
-			this.addObject(sceneId,values);
+			this.addObject(sceneId,data.message.object);
 			break;
 		case 'dropEnded':
-			this.addObject(sceneId,values);
+			this.addObject(sceneId,data.message.object);
 			break;
 		case 'objectRemoved':
-			this.removeObject(sceneId,values.message.uuid); //values === uuid
+			this.removeObject(sceneId,data.message.uuid); //values === uuid
 			break;
 		case 'objectChanged':
-			this.updateObject(sceneId,values.message.uuid,values);
+			this.updateObject(sceneId,data.message.uuid,data.message.object);
 			break;
 	}
 

@@ -46,13 +46,13 @@ document.addEventListener("DOMContentLoaded",function(event) {
         };
 
         var signals = editor.signals;
-        signals.geometryChanged.add(saveState);
+       /* signals.geometryChanged.add(saveState);
         signals.objectAdded.add(saveState);
         signals.objectChanged.add(saveState);
         signals.objectRemoved.add(saveState);
         signals.materialChanged.add(saveState);
         signals.sceneGraphChanged.add(saveState);
-
+*/
         editor.signals.themeChanged.dispatch();
 
         document.addEventListener('dragover', function (event) {
@@ -74,8 +74,8 @@ document.addEventListener("DOMContentLoaded",function(event) {
                 case 46: // delete
                     var parent = editor.selected.parent;
                     if ( confirm( 'Delete ' + editor.selected.name + '?' ) === true ){
-                        editor.removeObject(editor.selected);
-                        editor.signalsP2P.objectRemoved.dispatch(editor.selected);
+                        editor.removeObject(parent);
+                        editor.signalsP2P.objectRemoved.dispatch(parent);
                         editor.select(parent);
                     }
                     break;

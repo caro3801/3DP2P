@@ -3,7 +3,7 @@
  */
 var express = require('express');
 var router = express.Router();
-//var bdScene= require("../bd/bdScene");
+var bdScene= require("../bd/bdScene");
 /* GET scene page. */
 
 /*
@@ -44,24 +44,40 @@ router.delete('/:sceneId', function(req, res) {
 //post new object
 router.post('/:sceneId/objects', function(req, res) {
 	var sceneId=req.params.sceneId;
-	var objectValues=JSON.stringify(req.body.obj);
-	//bdScene.addObject(sceneId,objectValues);
-	res.status(200).end();
+	var objectValues=req.body;
+	bdScene.addObject(sceneId,objectValues,function(results){
+
+		res.status(200).end();
+	});
+});
+//get objectId
+router.get('/:sceneId/objects/:objectId', function(req, res) {
+	var sceneId=req.params.sceneId;
+	var objectId=req.params.objectId;
+	bdScene.getObject(sceneId,objectId,function(results){
+
+		res.status(200).end();
+	});
 });
 //update objectId
 router.put('/:sceneId/objects/:objectId', function(req, res) {
 	var sceneId=req.params.sceneId;
 	var objectId=req.params.objectId;
-	var objectValues=JSON.stringify(req.body.obj);
-	//bdScene.updateObject(sceneId,objectId,objectValues);
-	res.status(200).end();
+	var objectValues=req.body;
+	bdScene.updateObject(sceneId,objectId,objectValues,function(results){
+
+		res.status(200).end();
+	});
 });
 //delete objectId
 router.delete('/:sceneId/objects/:objectId', function(req, res) {
 	var sceneId=req.params.sceneId;
 	var objectId=req.params.objectId;
-	//bdScene.deleteObject(sceneId,objectId);
-	res.status(200).end();
+	bdScene.deleteObject(sceneId,objectId,function(results){
+
+		res.status(200).end();
+	});
+
 });
 
 module.exports = router;

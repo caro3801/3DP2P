@@ -62,6 +62,7 @@ var Editor = function () {
         themeChanged: new SIGNALS.Signal(),
         transformModeChanged: new SIGNALS.Signal(),
         cameraChanged: new SIGNALS.Signal(),
+        cameraAdded: new SIGNALS.Signal(),
 
         geometryChanged: new SIGNALS.Signal(),
 
@@ -333,24 +334,22 @@ Editor.prototype = {
 
     },
     lock: function ( object ) {
-        this.getByUuid(object.uuid);
 
-        if (this.current.locked ) return;
+        if (object.locked ) return;
 
-        this.current.locked = true;
+        object.locked = true;
 
-        this.signals.objectLocked.dispatch( this.current );
+        this.signals.objectLocked.dispatch( object );
 
     },
 
     unlock: function (object) {
 
-        this.getByUuid(object.uuid);
-        if ( !this.current.locked ) return;
+        if ( !object.locked ) return;
 
-        this.current.locked = false;
+        object.locked = false;
 
-        this.signals.objectUnlocked.dispatch( this.current );
+        this.signals.objectUnlocked.dispatch( object );
 
     },
 
