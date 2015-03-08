@@ -111,8 +111,29 @@ document.addEventListener("DOMContentLoaded",function(event) {
 		if(event.keyCode == 13) {
 			event.preventDefault();
 			var sceneId = event.target.value;
-			sceneStore.get(sceneId,function(){
-				console.log("it works");
+			sceneStore.get(sceneId,function(results){
+				var allData = JSON.parse(results);
+
+				for (var i=0;i<allData.length;i++){
+					var data = allData[i].object;
+					if ( data.metadata.type.toLowerCase() === 'object' ) {
+
+						var loader = new THREE.ObjectLoader();
+						var result = loader.parse( data );
+
+						if ( result instanceof THREE.Scene ) {
+
+							editor.setScene( result );
+
+						} else {
+
+							editor.addObject( result );
+							editor.select( result );
+
+						}
+
+					}
+				}
 			});
 		}
 	})

@@ -19,8 +19,9 @@ sceneStore.createScene = function(creatorId,callback){
 sceneStore.get = function(sceneId,callback){
 	var xhr = new XHR(XHR.createXMLHttpRequest());
 	xhr.get("scenes/"+sceneId,true);
-	xhr.addSuccessCallBack(function(a,b,c){
-		callback();
+	xhr.addSuccessCallBack(function(results){
+
+		callback(results);
 	});
 	xhr.send(null);
 	var value = JSON.parse(xhr.jsonText);
