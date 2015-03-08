@@ -100,7 +100,8 @@ document.addEventListener("DOMContentLoaded",function(event) {
     elem.addEventListener('keydown',function(event){
         if(event.keyCode == 13) {
             event.preventDefault();
-            user.connect(event.target.value);
+            var requestedPeer = event.target.value;
+            user.connect(requestedPeer);
         }
     },true);
 

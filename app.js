@@ -7,8 +7,7 @@ var bodyParser = require('body-parser');
 
 
 var routes = require('./routes/index');
-var users = require('./routes/users');
-var peers = require('./routes/peerroute');
+var scenes = require('./routes/scenes');
 
 var app = express();
 
@@ -41,8 +40,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 
 app.use('/', routes);
-app.use('/users', users);
-app.use('/peer', peers);
+app.use('/scenes', scenes);
 
 
 

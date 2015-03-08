@@ -25,7 +25,18 @@ XHR.prototype.post = function XHRPost(url, asynchrone) {
     this.xhr.open("POST", url, this.asynchrone);
     this.xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
 };
-
+XHR.prototype.delete = function XHRPost(url, asynchrone) {
+	this.jsonText=null;
+	this.asynchrone = asynchrone;
+	this.xhr.open("DELETE", url, this.asynchrone);
+	this.xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+};
+XHR.prototype.put = function XHRPost(url, asynchrone) {
+	this.jsonText=null;
+	this.asynchrone = asynchrone;
+	this.xhr.open("PUT", url, this.asynchrone);
+	this.xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+};
 XHR.prototype.postMP = function XHRPost(url, asynchrone) {
     this.jsonText=null;
     this.asynchrone = asynchrone;

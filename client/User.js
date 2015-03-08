@@ -4,7 +4,7 @@
 "use strict";
 var THREE = require('three');
 var Peer = require("peerjs");
-var XHR = require("./XHR");
+var sceneStore = require("./sceneStore");
 var camerasId = {};
 function User(editor, viewport, toolbar) {
     this.peers = {};
@@ -13,28 +13,29 @@ function User(editor, viewport, toolbar) {
     var that = this;
 
 
-    this.peer.on('open', function (id) {
-        console.log("my name is : " + id);
-        var myname=document.querySelector('#pid');
-        myname.value = id;
-        peer.on('connection', function (connp) {
+    this.peer.on('open', function (peerId) {
+        console.log("my name is : " + peerId);
+        var myname = document.querySelector('#pid');
+        myname.value = peerId;
+        that.peer.on('connection', function (connp) {
             that.peers[connp.peer] = connp;
             that.listen(connp.peer);
-        })
+            connp.on('open', function(){
+                that.peer.editor.signalsP2P.cameraAdded.dispatch(that.peer.editor.camera);
+            });
+        });
+
     });
 
 
     this.peer.editor = editor;
     this.peer.viewport = viewport;
     this.peer.toolbar = toolbar;
-
-
     var oCamera = this.peer.editor.camera.clone();
     var oldPos;
     var curr = 0;
     var i = 0;
     this.peer.viewport.signals.cameraSwitched.add(function (currCam) {
-
         var size = Object.keys(camerasId).length;
         if (i < size) {
             oCamera.position.copy(currCam.position);
@@ -44,34 +45,66 @@ function User(editor, viewport, toolbar) {
             currCam.rotation.copy(tmp.rotation);
             i++;
         } else if (i == size) {
-
             currCam.position.copy(oCamera.position);
             currCam.rotation.copy(oCamera.rotation);
             i = 0;
         }
-
         editor.signals.cameraChanged.dispatch(oCamera);
     });
 }
 
 User.prototype.connect = function (peerId) {
-    this.peers[peerId] = this.peer.connect(peerId);
+    var connect = this.peer.connect(peerId);
+    this.peers[peerId] = connect;
     this.listen(peerId);
+    var that = this;
+    connect.on('open', function(){
+        that.peer.editor.signalsP2P.cameraAdded.dispatch(that.peer.editor.camera);
+    });
+
 };
 
 User.prototype.listen = function (peerId) {
     var that = this;
-
     this.addSendToSignal(this.peers[peerId]);
 
     this.peers[peerId].on('data', function (data) {
+        console.log(data);
 
         var result = null;
-        if (data.message != null) {
+        var uuid = null;
+
+        //if we don't have uuid we have full object
+        if (data.message.uuid) {
+
+            uuid = data.message.uuid;
+
+            //transformations are defined for known uuid object
+            if (data.message.transformations) {
+
+                //Position
+                var jP = JSON.parse(data.message.transformations.position);
+                var vP = new THREE.Vector3(jP.x, jP.y, jP.z);
+                //Rotation
+                var rP = JSON.parse(data.message.transformations.rotation);
+                var vR = new THREE.Vector3(rP.x, rP.y, rP.z);
+                //Scale
+                var sP = JSON.parse(data.message.transformations.scale);
+                var vS = new THREE.Vector3(sP.x, sP.y, sP.z);
+
+            }
+
+        } else if (data.message.object) {
 
             var loader = new THREE.ObjectLoader();
-            result = loader.parse(data.message);
+            result = loader.parse(data.message.object);
+
+        } else {
+
+            throw new Error("Error in message : no object or uuid found");
+
         }
+
         switch (data.type) {
             case 'objectAdded':
                 that.peer.editor.addObject(result);
@@ -79,42 +112,35 @@ User.prototype.listen = function (peerId) {
             case 'dropEnded':
                 that.peer.editor.addObject(result);
                 break;
-            case 'objectSelected':
-                result != null ? that.peer.editor.selectByUuid(result.uuid) : that.peer.editor.deselect();
-                break;
             case 'objectLocked':
-                that.peer.editor.lock(result);
+                that.peer.editor.getByUuid(uuid);
+                that.peer.editor.lock(that.peer.editor.current);
                 break;
             case 'objectUnlocked':
-                that.peer.editor.unlock(result);
+                that.peer.editor.getByUuid(uuid);
+                that.peer.editor.unlock(that.peer.editor.current);
                 break;
             case 'objectFocused':
-                that.peer.editor.focus(result);
+                that.peer.editor.getByUuid(uuid);
+                that.peer.editor.focus(that.peer.editor.current);
 
                 break;
             case 'objectRemoved':
 
-                that.peer.editor.selectByUuid(result.uuid);
+                that.peer.editor.getByUuid(uuid);
 
-                var object = that.peer.editor.selected;
+                var object = that.peer.editor.current;
 
                 var parent = object.parent;
 
                 that.peer.editor.removeObject(object);
 
-                that.peer.editor.select(parent);
+                that.peer.editor.get(parent);
                 break;
-            case 'cameraChanged':
-                if (result instanceof THREE.Camera) {
-                    if(camerasId[this.peer]){
-                        //update camera
-                        that.peer.editor.getByUuid(result.uuid);
-                        that.peer.editor.current.position.copy(result.position);
-                        that.peer.editor.current.rotation.copy(result.rotation);
-                        that.peer.editor.signals.objectChanged.dispatch(that.peer.editor.current);
+            case 'cameraAdded':
 
-                    }else {
-                       // add camera
+                if (result instanceof THREE.Camera) {
+                    if (!camerasId[this.peer]) {
                         camerasId[this.peer] = result;
                         result.near = 0.01;
                         result.far = 1;
@@ -122,36 +148,44 @@ User.prototype.listen = function (peerId) {
                         result.updateProjectionMatrix();
                         that.peer.editor.addObject(result);
                     }
-                    /*var cam = camerasId[result.uuid];
+                }
+                break;
 
-                    if (cam) {
+            case 'cameraChanged':
+                if (result instanceof THREE.Camera) {
+                    if (camerasId[this.peer]) {
+                        //update camera
+                        that.peer.editor.getByUuid(uuid);
 
-                        that.peer.editor.getByUuid(result.uuid);
-                        that.peer.editor.current.position.copy(result.position);
-                        that.peer.editor.current.rotation.copy(result.rotation);
+                        that.peer.editor.current.position.copy(vP);
+                        that.peer.editor.current.rotation.copy(vR);
+
                         that.peer.editor.signals.objectChanged.dispatch(that.peer.editor.current);
 
-                    } else {
-
-                        camerasId[result.uuid] = result;
-
+                    }else {
+                        // add camera
+                        camerasId[this.peer] = result;
                         result.near = 0.01;
                         result.far = 1;
                         result.aspect = 4 / 3;
                         result.updateProjectionMatrix();
                         that.peer.editor.addObject(result);
+                    }
 
-                    }*/
                 }
 
                 break;
 
             case 'objectChanged':
-                that.peer.editor.getByUuid(result.uuid);
+                //UUID
+                that.peer.editor.getByUuid(uuid);
+
                 var current = that.peer.editor.current;
-                current.position.copy(result.position);
-                current.scale.copy(result.scale);
-                current.rotation.copy(result.rotation);
+
+                that.peer.editor.current.position.copy(vP);
+                that.peer.editor.current.rotation.copy(vR);
+                that.peer.editor.current.scale.copy(vS);
+
                 that.peer.editor.signals.objectChanged.dispatch(current);
                 break;
         }
@@ -180,87 +214,98 @@ User.prototype.sendDataOnEachConnexion = function (data) {
 
 User.prototype.addSendToSignal = function () {
     var that = this;
+	var sceneId=1;
 
-
-    var xhr = new XHR(XHR.createXMLHttpRequest());
-
-    var saveSceneDataOnServer = function (xhr,object) {
-        xhr.post("/save", true);
-        xhr.addSuccessCallBack(function () {
-            console.log("bien ouej");
-        });
-        var value = {obj: object.toJSON()};
-        xhr.send(JSON.stringify(value));
-    };
     this.peer.editor.signalsP2P.objectAdded.add(function (object) {
-        var data = {type: 'objectAdded', message: object.toJSON()};
+        var data = {type: 'objectAdded', message: {object: object.toJSON()}};
         that.sendDataOnEachConnexion(data);
+		sceneStore.sendToServer('objectAdded',sceneId,data);
     });
 
     this.peer.editor.signalsP2P.dropEnded.add(function (object) {
-        var data = {type: 'dropEnded', message: object.toJSON()};
-        that.sendDataOnEachConnexion(data);
-        that.saveSceneDataOnServer(xhr,object);
-    });
+        var message = {
+            "object": object.toJSON()
+        };
 
-    this.peer.editor.signalsP2P.cameraChanged.add(function (object) {
-        var data = {type: 'cameraChanged', message: object.toJSON()};
+        var data = {type: 'dropEnded', message: message};
+
         that.sendDataOnEachConnexion(data);
+		sceneStore.sendToServer('dropEnded',sceneId,data);
     });
 
     this.peer.editor.signalsP2P.objectRemoved.add(function (object) {
-        var data = {type: 'objectRemoved', message: object.toJSON()};
+        var message = {
+            uuid: object.uuid
+        };
+
+        var data = {type: 'objectRemoved', message: message};
         that.sendDataOnEachConnexion(data);
+
+		sceneStore.sendToServer('objectRemoved',sceneId,data);
     });
 
-    this.peer.editor.signalsP2P.objectSelected.add(function (object) {
-        var data = {type: 'objectSelected', message: object === null ? null : object.toJSON()};
-        that.sendDataOnEachConnexion(data);
-    });
+	this.peer.editor.signalsP2P.objectChanged.add(function (object) {
+		var message = {
+			uuid: object.uuid,
+			transformations: {
+				position: JSON.stringify(object.position),
+				rotation: JSON.stringify(object.rotation),
+				scale: JSON.stringify(object.scale)
+			}
+		};
+		var data = {type: 'objectChanged', message: message};
+		that.sendDataOnEachConnexion(data);
+		sceneStore.sendToServer('objectChanged',sceneId,data);
+
+	});
+
+	this.peer.editor.signalsP2P.cameraAdded.add(function (object) {
+		var message = {
+			"object": object.toJSON()
+		};
+		var data = {type: 'cameraAdded', message: message};
+		that.sendDataOnEachConnexion(data);
+	});
+
+	this.peer.editor.signalsP2P.cameraChanged.add(function (object) {
+		var message = {
+			"object": object.toJSON(),
+			uuid: object.uuid,
+			transformations: {
+				position:   JSON.stringify(object.position),
+				rotation:   JSON.stringify(object.rotation),
+				scale:      JSON.stringify(object.scale)
+			}
+		};
+
+		var data = {type: 'cameraChanged', message: message};
+		that.sendDataOnEachConnexion(data);
+
+	});
 
     this.peer.editor.signalsP2P.objectLocked.add(function (object) {
-        var data = {type: 'objectLocked', message: object.toJSON()};
+        var message = {
+            uuid: object.uuid
+        };
+        var data = {type: 'objectLocked', message: message};
         that.sendDataOnEachConnexion(data);
     });
 
     this.peer.editor.signalsP2P.objectUnlocked.add(function (object) {
-        var data = {type: 'objectUnlocked', message: object.toJSON()};
-        that.sendDataOnEachConnexion(data);
-    });
-
-    this.peer.editor.signalsP2P.objectChanged.add(function (object, mouse) {
-        var data = {type: 'objectChanged', message: object.toJSON(), mouse: mouse};
+        var message = {
+            uuid: object.uuid
+        };
+        var data = {type: 'objectUnlocked', message: message};
         that.sendDataOnEachConnexion(data);
     });
 
     this.peer.editor.signalsP2P.objectFocused.add(function (object) {
-        var data = {type: 'objectFocused', message: object.toJSON()};
+        var message = {
+            uuid: object.uuid
+        };
+        var data = {type: 'objectFocused', message: message};
         that.sendDataOnEachConnexion(data);
     });
-
-
-    /*signals.objectAdded.add(function(object){
-     if (connexion){
-     connexion.send({type:'objectAdded',message:object.toJSON()});
-     }
-     });
-     signals.objectRemoved.add(function(object){
-     if (connexion){
-     connexion.send({type:'objectRemoved',message:object.toJSON()});
-     }
-     });
-     signals.objectSelected.add(function(object){
-     if (connexion){
-     connexion.send({type:'objectSelected',message:object.toJSON()});
-     }
-     });
-
-     signals.objectChanged.add(function(object){
-     //conn.send("object added once");
-     if (connexion){
-     connexion.send({type:'objectChanged',message:object.toJSON()});
-     }
-     });*/
 
 };
 
