@@ -152,9 +152,9 @@ User.prototype.listen = function (peerId) {
                 break;
 
             case 'cameraChanged':
-                if (result instanceof THREE.Camera) {
                     if (camerasId[this.peer]) {
                         //update camera
+
                         that.peer.editor.getByUuid(uuid);
 
                         that.peer.editor.current.position.copy(vP);
@@ -172,7 +172,7 @@ User.prototype.listen = function (peerId) {
                         that.peer.editor.addObject(result);
                     }
 
-                }
+
 
                 break;
 
