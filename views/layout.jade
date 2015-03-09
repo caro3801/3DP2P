@@ -1,11 +1,10 @@
 doctype html
 html
   head
-    title= title
-    link(rel='stylesheet', href='/stylesheets/styles.css')
-  body
+      title= title
+      link(rel='stylesheet', href='/stylesheets/styles.css')
+  body.container-fluid
+    h1=subtitle
     block content
-
-    script(type='application/javascript',langage='javascript', src='/javascripts/front.js')
-
-    script(type = 'application/javascript', langage = 'javascript', src = '/javascripts/stats.min.js')
+    script( src='//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js' )
+    script( src='//maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js' )

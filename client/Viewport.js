@@ -12,7 +12,7 @@ var Viewport = function ( editor ) {
 
 	var container = document.createElement('div');
 	container.id='viewport';
-	container.style.position = 'absolute' ;
+	container.style.position = 'relative' ;
 
 	container.appendChild( new Viewport.Info( editor ) );
 

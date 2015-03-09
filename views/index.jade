@@ -1,10 +1,9 @@
 extends layout
-
 block content
-    #peers
-        input#pid
-        input#pid2
-        input#sceneId
-    #viewport-info Viewport info :
-    #helloworld
-    #browser
+    ul
+    each scene in scenes
+        li
+            a(href="/scenes/"+scene._id) Scene
+                =scene._id
+
+    button#create Create new scene

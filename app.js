@@ -21,8 +21,8 @@ var options = {
 };
 
 app.use('/myapp', ExpressPeerServer(server, options));
-server.on('connection', function(id) { console.log(id); });
-server.on('disconnect', function(id) { console.log(id); });
+server.on('connection', function(id) {/*	console.log(id); */});
+server.on('disconnect', function(id) { /*	console.log(id); */});
 
 
 // view engine setup

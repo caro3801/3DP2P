@@ -77,7 +77,7 @@ User.prototype.listen = function (peerId) {
     this.addSendToSignal(this.peers[peerId]);
 
     this.peers[peerId].on('data', function (data) {
-        console.log(data);
+        //console.log(data);
 
         var result = null;
         var uuid = null;

@@ -6,25 +6,31 @@ var router = express.Router();
 var bdScene= require("../bd/bdScene");
 /* GET scene page. */
 
-/*
-//get all scenes
-router.get('/', function(req, res) {
-	//bdScene.getAll();
-	res.status(200).end();
-});
+
+
 //create scene
 router.post('/', function(req, res) {
 	//bdScene.create();
 	res.status(200).end();
 });
 
-*/
+
 //get sceneId
 router.get('/:sceneId', function(req, res) {
 	var sceneId=req.params.sceneId;
 	bdScene.get(sceneId,function(err,results){
-		res.json(results);
+		if(req.accepts("text/html")){
+			res.render('editor',{subtitle:'Scene editor',scene:results});
+		} else if(req.accepts("application/json")){
+			res.json(results);
+		}
+	});
+});
 
+//get all scenes
+router.get('/', function(req, res) {
+	bdScene.getAll(function(results){
+		res.json(results);
 	});
 });
 /*
@@ -43,6 +49,13 @@ router.delete('/:sceneId', function(req, res) {
 	res.status(200).end();
 });
 */
+//get objects in scene
+router.get('/:sceneId/objects', function(req, res) {
+	var sceneId=req.params.sceneId;
+	bdScene.getObjects(sceneId,function(err,results){
+		res.json(results);
+	});
+});
 //post new object
 router.post('/:sceneId/objects', function(req, res) {
 	var sceneId=req.params.sceneId;

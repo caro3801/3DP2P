@@ -12,8 +12,8 @@ document.addEventListener("DOMContentLoaded",function(event) {
     var toolbar = new Toolbar(editor);
     var user = new User(editor,viewport,toolbar);
 
-    document.body.appendChild(toolbar);
-    document.body.appendChild(viewport.container);
+	document.body.appendChild(toolbar);
+	document.body.appendChild(viewport.container);
 
     editor.storage.init(function () {
         editor.storage.get(function (state) {
@@ -93,9 +93,52 @@ document.addEventListener("DOMContentLoaded",function(event) {
         window.addEventListener('resize', onWindowResize, false);
         onWindowResize();
 
+		var initData = function(){
+
+			var sceneId = null;
+			var hash=window.location.pathname.split("/");
+			for (var i=0;i<hash.length;++i){
+				if (hash[i].toLowerCase()==="scenes"){
+					sceneId=hash[++i];
+					break;
+				}
+			}
+			if(sceneId!==null){
+				sceneStore.getObjects(sceneId,function(results){
+					var allData = JSON.parse(results);
+
+					for (var i=0;i<allData.length;i++){
+						var data = allData[i].object;
+						if ( data.metadata.type.toLowerCase() === 'object' ) {
+
+							var loader = new THREE.ObjectLoader();
+							var result = loader.parse( data );
+
+							if ( result instanceof THREE.Scene ) {
+
+								editor.setScene( result );
+
+							} else {
+
+								editor.addObject( result );
+								editor.select( result );
+
+							}
+
+						}
+					}
+				});
+			}else{
+				throw new Error('Scene id is not matching existing ones...');
+			}
+
+		}
+		initData();
+
     });
 
-    document.querySelector("#browser").innerHTML=navigator.userAgent;
+
+
     var elem=document.querySelector('#pid2');
 
     elem.addEventListener('keydown',function(event){
@@ -105,7 +148,11 @@ document.addEventListener("DOMContentLoaded",function(event) {
             user.connect(requestedPeer);
         }
     },true);
-
+	var browser=document.createElement("div");
+	browser.id="browser";
+	browser.innerHTML=navigator.userAgent;
+	document.body.appendChild(browser);
+/*
 	var sceneId =document.getElementById("sceneId");
 	sceneId.addEventListener('keydown', function(event){
 		if(event.keyCode == 13) {
@@ -136,7 +183,7 @@ document.addEventListener("DOMContentLoaded",function(event) {
 				}
 			});
 		}
-	})
+	})*/
 
 
 });
