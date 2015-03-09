@@ -35,18 +35,26 @@ function User(editor, viewport, toolbar) {
     var oldPos;
     var curr = 0;
     var i = 0;
+
     this.peer.viewport.signals.cameraSwitched.add(function (currCam) {
+
         var size = Object.keys(camerasId).length;
+
         if (i < size) {
             oCamera.position.copy(currCam.position);
             oCamera.rotation.copy(currCam.rotation);
+			oCamera.lookAt(currCam.getWorldDirection());
+
             var tmp = camerasId[Object.keys(camerasId)[i]];
             currCam.position.copy(tmp.position);
             currCam.rotation.copy(tmp.rotation);
+
+			currCam.lookAt(tmp.getWorldDirection());
             i++;
         } else if (i == size) {
             currCam.position.copy(oCamera.position);
             currCam.rotation.copy(oCamera.rotation);
+			currCam.lookAt(oCamera.getWorldDirection());
             i = 0;
         }
         editor.signals.cameraChanged.dispatch(oCamera);
@@ -87,12 +95,19 @@ User.prototype.listen = function (peerId) {
                 var vP = new THREE.Vector3(jP.x, jP.y, jP.z);
                 //Rotation
                 var rP = JSON.parse(data.message.transformations.rotation);
-                var vR = new THREE.Vector3(rP.x, rP.y, rP.z);
+                var vR = new THREE.Euler(rP.x, rP.y, rP.z,rP.order);
                 //Scale
-                var sP = JSON.parse(data.message.transformations.scale);
-                var vS = new THREE.Vector3(sP.x, sP.y, sP.z);
+				if(data.message.transformations.scale){
+
+					var sP = JSON.parse(data.message.transformations.scale);
+					var vS = new THREE.Vector3(sP.x, sP.y, sP.z);
+				}
 
             }
+			if (data.message.worldDirection){
+				var wD = JSON.parse(data.message.worldDirection);
+				var vWD = new THREE.Vector3(wD.x, wD.y, wD.z);
+			}
 
         } else if (data.message.object) {
 
@@ -158,8 +173,8 @@ User.prototype.listen = function (peerId) {
                         that.peer.editor.getByUuid(uuid);
 
                         that.peer.editor.current.position.copy(vP);
-                        that.peer.editor.current.rotation.copy(vR);
-
+                        that.peer.editor.current.rotation.fromArray(rP);
+						//that.peer.editor.current.lookAt(wD);
                         that.peer.editor.signals.objectChanged.dispatch(that.peer.editor.current);
 
                     }else {
@@ -272,14 +287,15 @@ User.prototype.addSendToSignal = function () {
 	});
 
 	this.peer.editor.signalsP2P.cameraChanged.add(function (object) {
+		var wdv = object.getWorldDirection();
 		var message = {
 			"object": object.toJSON(),
 			uuid: object.uuid,
 			transformations: {
 				position:   JSON.stringify(object.position),
-				rotation:   JSON.stringify(object.rotation),
-				scale:      JSON.stringify(object.scale)
-			}
+				rotation:   JSON.stringify(object.rotation.toArray())
+			},
+			worldDirection:JSON.stringify(wdv)
 		};
 
 		var data = {type: 'cameraChanged', message: message};
