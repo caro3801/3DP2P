@@ -29,7 +29,7 @@ function User(editor, viewport, toolbar) {
             that.peers[connp.peer] = connp;
             that.listen(connp.peer);
             connp.on('open', function(){
-                that.peer.editor.signalsP2P.cameraAdded.dispatch(that.peer.editor.camera);
+                that.peer.editor.signalsP2P.cameraAdded.dispatch(connp,that.peer.editor.camera);
 				that.peer.signalsUser.userConnected.dispatch(connp.peer);
             });
         });
@@ -113,7 +113,7 @@ User.prototype.connect = function (peerId) {
     this.listen(peerId);
     var that = this;
     connect.on('open', function(){
-        that.peer.editor.signalsP2P.cameraAdded.dispatch(that.peer.editor.camera);
+        that.peer.editor.signalsP2P.cameraAdded.dispatch(connect, that.peer.editor.camera);
     });
 
 };
@@ -261,7 +261,11 @@ User.prototype.listen = function (peerId) {
 User.prototype.sendDataOnEachConnexion = function (data) {
     for (var peerId in this.peers) {
         var connexion = this.peers[peerId];
-        connexion.send(data);
+		if(connexion.open) {
+			connexion.send(data);
+		} else {
+			throw new Error("No open connection with "+connexion.peer);
+		}
     }
 };
 
@@ -316,12 +320,12 @@ User.prototype.addSendToSignal = function () {
 
 	});
 
-	this.peer.editor.signalsP2P.cameraAdded.add(function (object) {
+	this.peer.editor.signalsP2P.cameraAdded.add(function (connection, object) {
 		var message = {
 			"object": object.toJSON()
 		};
 		var data = {type: 'cameraAdded', message: message};
-		that.sendDataOnEachConnexion(data);
+		connection.send(data);
 	});
 
 	this.peer.editor.signalsP2P.cameraChanged.add(function (object) {
