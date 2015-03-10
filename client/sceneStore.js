@@ -67,7 +67,7 @@ sceneStore.getObjects = function(sceneId,callback){
 	xhr.send(null);
 
 };
-sceneStore.addObject = function(sceneId,values,callback){
+sceneStore.addObject = function(sceneId,values){
 	var xhr = new XHR(XHR.createXMLHttpRequest());
 	xhr.post("/scenes/"+sceneId+"/objects",true);
 	xhr.addSuccessCallBack(function(){

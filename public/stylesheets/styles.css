@@ -8036,9 +8036,16 @@ button.close {
   display: block;
 }
 
-/* line 14, ../sass/styles.scss */
+/* line 15, ../sass/styles.scss */
 #peers {
-  float: right;
-  margin-right: 0px;
-  height: 20px;
+  /* float :right;
+   height: 20px;*/
+}
+
+/* line 21, ../sass/styles.scss */
+#editorbutton {
+  margin: 0 0 0 0;
+  padding: 15px;
+  color: #F8F8F8;
+  background-color: #428bca;
 }

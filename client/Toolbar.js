@@ -18,6 +18,7 @@ var Toolbar = function ( editor ) {
 	var translate = document.createElement("button");
 	translate.id = 'translate';
 	translate.innerHTML = 'translate';
+	translate.className +=" btn btn-default ";
 	translate.addEventListener('click', function () {
 
 		signals.transformModeChanged.dispatch( 'translate' );
@@ -28,6 +29,7 @@ var Toolbar = function ( editor ) {
 	var rotate = document.createElement("button");
 	rotate.id = 'rotate';
 	rotate.innerHTML = 'rotate';
+	rotate.className +=" btn btn-default";
 	rotate.addEventListener('click', function () {
 
 		signals.transformModeChanged.dispatch( 'rotate' );
@@ -38,6 +40,7 @@ var Toolbar = function ( editor ) {
 	var scale = document.createElement("button");
 	scale.id = 'scale';
 	scale.innerHTML = 'scale';
+	scale.className +=" btn btn-default ";
 	scale.addEventListener('click', function () {
 
 		signals.transformModeChanged.dispatch( 'scale' );

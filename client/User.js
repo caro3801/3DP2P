@@ -13,7 +13,7 @@ function User(editor, viewport, toolbar) {
     this.peers = {};
     this.peer = new Peer({host: window.location.hostname, port: 9000, path: '/myapp'});
     var peer = this.peer;
-
+	this.queue=0;
 	this.peer.editor = editor;
 	this.peer.viewport = viewport;
 	this.peer.toolbar = toolbar;
@@ -25,13 +25,12 @@ function User(editor, viewport, toolbar) {
     this.peer.on('open', function (peerId) {
         console.log("my name is : " + peerId);
 		that.peer.signalsUser.userOpened.dispatch(that.peer.editor.sceneId,peerId);
-        var myname = document.querySelector('#pid');
-        myname.value = peerId;
         that.peer.on('connection', function (connp) {
             that.peers[connp.peer] = connp;
             that.listen(connp.peer);
             connp.on('open', function(){
                 that.peer.editor.signalsP2P.cameraAdded.dispatch(that.peer.editor.camera);
+				that.peer.signalsUser.userConnected.dispatch(connp.peer);
             });
         });
 
@@ -40,7 +39,9 @@ function User(editor, viewport, toolbar) {
 	window.onunload = window.onbeforeunload = function(e) {
 		if (!!that.peer && !that.peer.destroyed) {
 
-			that.peer.signalsUser.userDisconnected.dispatch(that.peer.editor.sceneId,that.peer.id);
+			sceneStore.removeUser(that.peer.editor.sceneId,that.peer.id,function(){
+				console.log("peerId left")
+			});
 			that.peer.destroy();
 		}
 	};
@@ -51,17 +52,29 @@ function User(editor, viewport, toolbar) {
 	};
 	this.peer.signalsUser.userOpened.add(function(sceneId,peerId){
 		sceneStore.addUser(sceneId,{userId:peerId},function(result){
-			sceneStore.getUsers(that.peer.editor.sceneId,function(users){
-				console.log(users);
+			sceneStore.getUsers(that.peer.editor.sceneId,function(res){
+				that.users =JSON.parse(res);
+				document.querySelector("#me").innerHTML=" "+peerId+", ";
+
+				var index = that.users.indexOf(peerId);
+				that.users.splice(index,1);
+				document.querySelector("#presents").innerHTML=that.users.join(', ');
+				for(var i = 0; i<that.users.length;i++){
+					that.connect(that.users[i]);
+				}
 			});
 		});
 
 	});
-	/*this.peer.signalsUser.userConnected.add(function(sceneId,peerId){
-		sceneStore.addUser(sceneId,peerId);
-	});*/
-	this.peer.signalsUser.userDisconnected.add(function(sceneId,peerId){
-		sceneStore.removeUser(sceneId,peerId);
+	this.peer.signalsUser.userConnected.add(function(peerId){
+		that.users.push(peerId);
+		document.querySelector("#presents").innerHTML = that.users.join(', ');
+	});
+	this.peer.signalsUser.userDisconnected.add(function(peerId){
+		var index = that.users.indexOf(peerId);
+		that.users.splice(index,1);
+		document.querySelector("#presents").innerHTML = that.users.join(', ');
+
 	});
 
     var oCamera = this.peer.editor.camera.clone();
@@ -210,14 +223,6 @@ User.prototype.listen = function (peerId) {
 						//that.peer.editor.current.lookAt(wD);
                         that.peer.editor.signals.objectChanged.dispatch(that.peer.editor.current);
 
-                    }else {
-                        // add camera
-                        camerasId[this.peer] = result;
-                        result.near = 0.01;
-                        result.far = 1;
-                        result.aspect = 4 / 3;
-                        result.updateProjectionMatrix();
-                        that.peer.editor.addObject(result);
                     }
 
                 break;
@@ -242,7 +247,8 @@ User.prototype.listen = function (peerId) {
         console.log(peerId + ' has left.');
 
         that.peer.editor.removeObject(camerasId[peerId]);
-		that.peer.signalsUser.userDisconnected.dispatch(that.peer.editor.sceneId,peerId);
+
+		that.peer.signalsUser.userDisconnected.dispatch(peerId);
         delete camerasId[peerId];
         delete that.peers[peerId];
     });
@@ -319,6 +325,9 @@ User.prototype.addSendToSignal = function () {
 	});
 
 	this.peer.editor.signalsP2P.cameraChanged.add(function (object) {
+		if (++that.queue%50 ==0){
+
+
 		var wdv = object.getWorldDirection();
 		var message = {
 			"object": object.toJSON(),
@@ -332,7 +341,7 @@ User.prototype.addSendToSignal = function () {
 
 		var data = {type: 'cameraChanged', message: message};
 		that.sendDataOnEachConnexion(data);
-
+		}
 	});
 
     this.peer.editor.signalsP2P.objectLocked.add(function (object) {

@@ -1,7 +1,13 @@
 extends layout
-block content
-    ul
-    each scene in scenes
+block nav
+    ul.nav.navbar-nav
+        li.active
+            a(href="/") Home
         li
-            a(href="/scenes/"+scene._id) Scene
-                =scene._id
+            a(href="/scenes") Scenes
+block content
+    .jumbotron
+        h1=subtitle
+        p 3DP2P application
+        p
+            a.btn.btn-primary.btn-lg(href="/scenes") Try it now !

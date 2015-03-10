@@ -4,8 +4,7 @@ var router = express.Router();
 var bdScene= require("../bd/bdScene");
 /* GET home page. */
 router.get('/', function(req, res) {
-	bdScene.getAll(function(results){
-		res.render('index',{title:'3DP2P',subtitle:"Scenes",scenes:results});
-	});
+		res.render('index',{title:'3DP2P',subtitle:"Welcome"});
+
 });
 module.exports = router;

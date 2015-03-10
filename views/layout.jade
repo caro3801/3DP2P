@@ -3,8 +3,14 @@ html
   head
       title= title
       link(rel='stylesheet', href='/stylesheets/styles.css')
-  body.container-fluid
-    h1=subtitle
-    block content
+  body
+    nav.navbar.navbar-default
+      .container
+        .navbar-header
+          a.navbar-brand(href="#") 3DP2P
+        #navbar.collapse.navbar-collapse
+          block nav
+    #content.container
+      block content
     script( src='//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js' )
     script( src='//maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js' )

@@ -10,10 +10,17 @@
 }
 #toolbar{
   display: block;
+
 }
 #peers{
 
-  float :right;
-  margin-right: 0px;
-  height: 20px;
+ /* float :right;
+  height: 20px;*/
+}
+
+#editorbutton{
+  margin:0 0 0 0;
+  padding: 15px;
+  color: #F8F8F8;
+  background-color: #428bca;
 }

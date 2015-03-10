@@ -20,8 +20,8 @@ document.addEventListener("DOMContentLoaded",function(event) {
     var viewport = new Viewport(editor);
     var toolbar = new Toolbar(editor);
     var user = new User(editor,viewport,toolbar);
-	document.body.appendChild(toolbar);
-	document.body.appendChild(viewport.container);
+	document.querySelector("#left").appendChild(toolbar);
+	document.querySelector("#editor").appendChild(viewport.container);
 
     editor.storage.init(function () {
         editor.storage.get(function (state) {
@@ -67,14 +67,14 @@ document.addEventListener("DOMContentLoaded",function(event) {
 */
 		 //signals.geometryChanged.add(saveState);
 		 signalsP2P.dropEnded.add(function(o){
-			 sceneStore.sendToServer(sceneId,{type:'objectAdded',message: o.toJSON()});
+			 sceneStore.sendToServer(sceneId,{type:'objectAdded',message: {object:o.toJSON()}});
 		 });
-		 signals.objectChanged.add(function(object){
+		 signalsP2P.objectChanged.add(function(object){
 
 			 sceneStore.sendToServer(sceneId,{type:'objectChanged',  message: {uuid:object.parent.uuid,object:object.parent.toJSON()}});
 		 });
 		 signals.objectRemoved.add(function(o){
-			 sceneStore.sendToServer(sceneId,{type:'objectRemoved', message:o.uuid});
+			 sceneStore.sendToServer(sceneId,{type:'objectRemoved', message:{uuid:o.uuid}});
 		 });
 		 //signals.materialChanged.add(saveState);
 
@@ -125,23 +125,21 @@ document.addEventListener("DOMContentLoaded",function(event) {
 					var allData = JSON.parse(results);
 
 					for (var i=0;i<allData.length;i++){
-						var data = allData[i].object;
-						if ( data.metadata.type.toLowerCase() === 'object' ) {
+						var object = allData[i].object;
+						if ( object.metadata && object.metadata.type.toLowerCase() === 'object' ) {
 
 							var loader = new THREE.ObjectLoader();
-							var result = loader.parse( data );
+							var result = loader.parse(object);
+							if (result instanceof THREE.Scene) {
 
-							if ( result instanceof THREE.Scene ) {
-
-								editor.setScene( result );
+								editor.setScene(result);
 
 							} else {
 
-								editor.addObject( result );
-								editor.select( result );
+								editor.addObject(result);
+								editor.select(result);
 
 							}
-
 						}
 					}
 				});
@@ -154,21 +152,10 @@ document.addEventListener("DOMContentLoaded",function(event) {
 
     });
 
-
-
-    var elem=document.querySelector('#pid2');
-
-    elem.addEventListener('keydown',function(event){
-        if(event.keyCode == 13) {
-            event.preventDefault();
-            var requestedPeer = event.target.value;
-            user.connect(requestedPeer);
-        }
-    },true);
 	var browser=document.createElement("div");
 	browser.id="browser";
 	browser.innerHTML=navigator.userAgent;
-	document.body.appendChild(browser);
+	document.querySelector("#content").appendChild(browser);
 /*
 	var sceneId =document.getElementById("sceneId");
 	sceneId.addEventListener('keydown', function(event){

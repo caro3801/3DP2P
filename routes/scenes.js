@@ -29,9 +29,9 @@ router.get('/:sceneId', function(req, res) {
 
 //get all scenes
 router.get('/', function(req, res) {
-	bdScene.getAll(function(results){
+	bdScene.getAll(function(err,results){
 		if(req.accepts("text/html")){
-			res.render('index',{subtitle:'Scenes',scene:results});
+			res.render('scenes',{subtitle:'Scenes',scenes:results});
 		} else if(req.accepts("application/json")){
 			res.json(results);
 		}
