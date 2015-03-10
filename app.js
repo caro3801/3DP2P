@@ -39,8 +39,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 
 
-app.use('/', routes);
 app.use('/scenes', scenes);
+app.use('/', routes);
 
 
 

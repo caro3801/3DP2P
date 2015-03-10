@@ -69,24 +69,20 @@ sceneStore.getObjects = function(sceneId,callback){
 };
 sceneStore.addObject = function(sceneId,values,callback){
 	var xhr = new XHR(XHR.createXMLHttpRequest());
-	xhr.post("/scenes/"+sceneId+"/objects",false);
+	xhr.post("/scenes/"+sceneId+"/objects",true);
 	xhr.addSuccessCallBack(function(){
 		console.log("Object added to scene " + sceneId );
 	});
 	xhr.send(JSON.stringify(values));
 
-	return JSON.parse(xhr.jsonText);
-
 };
 sceneStore.updateObject = function(sceneId,objectId,values , callback){
 	var xhr = new XHR(XHR.createXMLHttpRequest());
-	xhr.put("/scenes/"+sceneId+"/objects/"+objectId,false);
+	xhr.put("/scenes/"+sceneId+"/objects/"+objectId,true);
 	xhr.addSuccessCallBack(function(){
-		console.log("Object"+ objectId+" updated in scene " + sceneId );
+		console.log("Object "+ objectId+" updated in scene " + sceneId );
 	});
 	xhr.send(JSON.stringify(values));
-
-	return JSON.parse(xhr.jsonText);
 
 };
 sceneStore.removeObject = function(sceneId,objectId,callback){
@@ -94,12 +90,37 @@ sceneStore.removeObject = function(sceneId,objectId,callback){
 
 	xhr.delete("/scenes/"+sceneId+"/objects/"+objectId,true);
 	xhr.addSuccessCallBack(function(){
-		console.log("Object"+ objectId+" updated in scene " + sceneId );
+		console.log("Object "+ objectId+" removed from scene " + sceneId );
 	});
 	xhr.send(null);
 
 };
 
+sceneStore.getUsers = function(sceneId,callback){
+	var xhr = new XHR(XHR.createXMLHttpRequest());
+	xhr.get("/scenes/"+sceneId+"/users",true);
+	xhr.addSuccessCallBack(callback);
+	xhr.send(null);
+
+};
+
+sceneStore.addUser = function(sceneId,userValues,callback){
+	var xhr = new XHR(XHR.createXMLHttpRequest());
+	xhr.post("/scenes/"+sceneId+"/users",true);
+	xhr.addSuccessCallBack(callback);
+	xhr.send(JSON.stringify(userValues));
+
+};
+
+sceneStore.removeUser = function(sceneId,userId){
+	var xhr = new XHR(XHR.createXMLHttpRequest());
+	xhr.delete("/scenes/"+sceneId+"/users/"+userId,true);
+	xhr.addSuccessCallBack(function(){
+		console.log("User left scene " + sceneId );
+	});
+	xhr.send(null);
+
+};
 sceneStore.sendToServer = function(sceneId,data){
 
 	switch (data.type) {

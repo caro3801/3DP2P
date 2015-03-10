@@ -30,7 +30,11 @@ router.get('/:sceneId', function(req, res) {
 //get all scenes
 router.get('/', function(req, res) {
 	bdScene.getAll(function(results){
-		res.json(results);
+		if(req.accepts("text/html")){
+			res.render('index',{subtitle:'Scenes',scene:results});
+		} else if(req.accepts("application/json")){
+			res.json(results);
+		}
 	});
 });
 /*
@@ -60,7 +64,7 @@ router.get('/:sceneId/objects', function(req, res) {
 router.post('/:sceneId/objects', function(req, res) {
 	var sceneId=req.params.sceneId;
 	var objectValues=req.body;
-	bdScene.addObject(sceneId,objectValues,function(results){
+	bdScene.addObject(sceneId,objectValues,function(err,results){
 
 		res.status(200).end();
 	});
@@ -69,7 +73,7 @@ router.post('/:sceneId/objects', function(req, res) {
 router.get('/:sceneId/objects/:objectId', function(req, res) {
 	var sceneId=req.params.sceneId;
 	var objectId=req.params.objectId;
-	bdScene.getObject(sceneId,objectId,function(results){
+	bdScene.getObject(sceneId,objectId,function(err,results){
 
 		res.status(200).end();
 	});
@@ -79,7 +83,7 @@ router.put('/:sceneId/objects/:objectId', function(req, res) {
 	var sceneId=req.params.sceneId;
 	var objectId=req.params.objectId;
 	var objectValues=req.body;
-	bdScene.updateObject(sceneId,objectId,objectValues,function(results){
+	bdScene.updateObject(sceneId,objectId,objectValues,function(err,results){
 
 		res.status(200).end();
 	});
@@ -88,8 +92,36 @@ router.put('/:sceneId/objects/:objectId', function(req, res) {
 router.delete('/:sceneId/objects/:objectId', function(req, res) {
 	var sceneId=req.params.sceneId;
 	var objectId=req.params.objectId;
-	bdScene.deleteObject(sceneId,objectId,function(results){
+	bdScene.deleteObject(sceneId,objectId,function(err,results){
 
+		res.status(200).end();
+	});
+
+});
+
+//USERS
+//get all users
+router.get('/:sceneId/users', function(req, res) {
+	var sceneId=req.params.sceneId;
+	bdScene.getUsers(sceneId,function(err,results){
+		res.json(results.users);
+	});
+
+});
+//add userId
+router.post('/:sceneId/users/', function(req, res) {
+	var sceneId=req.params.sceneId;
+	var userId = req.body.userId;
+	bdScene.addUser(sceneId,userId,function(err,results){
+		res.status(200).end();
+	});
+
+});
+//remove userId
+router.delete('/:sceneId/users/:userId', function(req, res) {
+	var sceneId=req.params.sceneId;
+	var userId=req.params.userId;
+	bdScene.removeUser(sceneId,userId,function(err,results){
 		res.status(200).end();
 	});
 

@@ -86,6 +86,7 @@ var Editor = function () {
 //
         dropEnded : new SIGNALS.Signal()
     };
+
     this.config = new Config();
     this.storage = new Storage();
     this.loader = new Loader( this );

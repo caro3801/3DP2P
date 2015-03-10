@@ -8,10 +8,18 @@ var User = require('./User');
 var sceneStore  = require('./sceneStore');
 document.addEventListener("DOMContentLoaded",function(event) {
     var editor = new Editor();
+	editor.sceneId = null;
+	var hash=window.location.pathname.split("/");
+	for (var i=0;i<hash.length;++i){
+		if (hash[i].toLowerCase()==="scenes"){
+			editor.sceneId=hash[++i];
+			break;
+		}
+	}
+	var sceneId=editor.sceneId;
     var viewport = new Viewport(editor);
     var toolbar = new Toolbar(editor);
     var user = new User(editor,viewport,toolbar);
-
 	document.body.appendChild(toolbar);
 	document.body.appendChild(viewport.container);
 
@@ -46,7 +54,10 @@ document.addEventListener("DOMContentLoaded",function(event) {
             }, 1000);
         };
 
+
+
         var signals = editor.signals;
+		var signalsP2P = editor.signalsP2P;
        /* signals.geometryChanged.add(saveState);
         signals.objectAdded.add(saveState);
         signals.objectChanged.add(saveState);
@@ -54,6 +65,20 @@ document.addEventListener("DOMContentLoaded",function(event) {
         signals.materialChanged.add(saveState);
         signals.sceneGraphChanged.add(saveState);
 */
+		 //signals.geometryChanged.add(saveState);
+		 signalsP2P.dropEnded.add(function(o){
+			 sceneStore.sendToServer(sceneId,{type:'objectAdded',message: o.toJSON()});
+		 });
+		 signals.objectChanged.add(function(object){
+
+			 sceneStore.sendToServer(sceneId,{type:'objectChanged',  message: {uuid:object.parent.uuid,object:object.parent.toJSON()}});
+		 });
+		 signals.objectRemoved.add(function(o){
+			 sceneStore.sendToServer(sceneId,{type:'objectRemoved', message:o.uuid});
+		 });
+		 //signals.materialChanged.add(saveState);
+
+
         editor.signals.themeChanged.dispatch();
 
         document.addEventListener('dragover', function (event) {
@@ -95,14 +120,6 @@ document.addEventListener("DOMContentLoaded",function(event) {
 
 		var initData = function(){
 
-			var sceneId = null;
-			var hash=window.location.pathname.split("/");
-			for (var i=0;i<hash.length;++i){
-				if (hash[i].toLowerCase()==="scenes"){
-					sceneId=hash[++i];
-					break;
-				}
-			}
 			if(sceneId!==null){
 				sceneStore.getObjects(sceneId,function(results){
 					var allData = JSON.parse(results);

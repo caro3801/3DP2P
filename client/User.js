@@ -6,15 +6,25 @@ var THREE = require('three');
 var Peer = require("peerjs");
 var sceneStore = require("./sceneStore");
 var camerasId = {};
+
+var signals = require('signals');
 function User(editor, viewport, toolbar) {
+	var SIGNALS = signals;
     this.peers = {};
     this.peer = new Peer({host: window.location.hostname, port: 9000, path: '/myapp'});
     var peer = this.peer;
+
+	this.peer.editor = editor;
+	this.peer.viewport = viewport;
+	this.peer.toolbar = toolbar;
+	this.users = [];
+
     var that = this;
 
 
     this.peer.on('open', function (peerId) {
         console.log("my name is : " + peerId);
+		that.peer.signalsUser.userOpened.dispatch(that.peer.editor.sceneId,peerId);
         var myname = document.querySelector('#pid');
         myname.value = peerId;
         that.peer.on('connection', function (connp) {
@@ -28,9 +38,26 @@ function User(editor, viewport, toolbar) {
     });
 
 
-    this.peer.editor = editor;
-    this.peer.viewport = viewport;
-    this.peer.toolbar = toolbar;
+	this.peer.signalsUser = {
+		userOpened : new SIGNALS.Signal(),
+		userConnected : new SIGNALS.Signal(),
+		userDisconnected : new SIGNALS.Signal()
+	};
+	this.peer.signalsUser.userOpened.add(function(sceneId,peerId){
+		sceneStore.addUser(sceneId,{userId:peerId},function(result){
+			sceneStore.getUsers(that.peer.editor.sceneId,function(users){
+				console.log(users);
+			});
+		});
+
+	});
+	/*this.peer.signalsUser.userConnected.add(function(sceneId,peerId){
+		sceneStore.addUser(sceneId,peerId);
+	});*/
+	this.peer.signalsUser.userDisconnected.add(function(sceneId,peerId){
+		sceneStore.removeUser(sceneId,peerId);
+	});
+
     var oCamera = this.peer.editor.camera.clone();
     var oldPos;
     var curr = 0;
@@ -187,8 +214,6 @@ User.prototype.listen = function (peerId) {
                         that.peer.editor.addObject(result);
                     }
 
-
-
                 break;
 
             case 'objectChanged':
@@ -211,6 +236,7 @@ User.prototype.listen = function (peerId) {
         console.log(peerId + ' has left.');
 
         that.peer.editor.removeObject(camerasId[peerId]);
+		that.peer.signalsUser.userDisconnected.dispatch(that.peer.editor.sceneId,peerId);
         delete camerasId[peerId];
         delete that.peers[peerId];
     });
@@ -229,7 +255,7 @@ User.prototype.sendDataOnEachConnexion = function (data) {
 
 User.prototype.addSendToSignal = function () {
     var that = this;
-	var sceneId=1;
+
 
     this.peer.editor.signalsP2P.objectAdded.add(function (object) {
 		var message = {
@@ -237,7 +263,7 @@ User.prototype.addSendToSignal = function () {
 		};
         var data = {type: 'objectAdded', message: message};
         that.sendDataOnEachConnexion(data);
-		sceneStore.sendToServer(sceneId,data);
+		//sceneStore.sendToServer(sceneId,data);
     });
 
     this.peer.editor.signalsP2P.dropEnded.add(function (object) {
@@ -248,7 +274,7 @@ User.prototype.addSendToSignal = function () {
         var data = {type: 'dropEnded', message: message};
 
         that.sendDataOnEachConnexion(data);
-		sceneStore.sendToServer(sceneId,data);
+		//sceneStore.sendToServer(sceneId,data);
     });
 
     this.peer.editor.signalsP2P.objectRemoved.add(function (object) {
@@ -259,7 +285,7 @@ User.prototype.addSendToSignal = function () {
         var data = {type: 'objectRemoved', message: message};
         that.sendDataOnEachConnexion(data);
 
-		sceneStore.sendToServer(sceneId,data);
+		//sceneStore.sendToServer(sceneId,data);
     });
 
 	this.peer.editor.signalsP2P.objectChanged.add(function (object) {
@@ -274,7 +300,7 @@ User.prototype.addSendToSignal = function () {
 		var data = {type: 'objectChanged', message: message};
 		var data2 = {type: 'objectChanged', message: {uuid:object.parent.uuid,object:object.parent.toJSON()}};
 		that.sendDataOnEachConnexion(data);
-		sceneStore.sendToServer(sceneId,data2);
+		//sceneStore.sendToServer(sceneId,data2);
 
 	});
 
