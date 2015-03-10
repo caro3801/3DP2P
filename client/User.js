@@ -234,7 +234,7 @@ User.prototype.listen = function (peerId) {
                 var current = that.peer.editor.current;
 
                 that.peer.editor.current.position.copy(vP);
-                that.peer.editor.current.rotation.copy(vR);
+                that.peer.editor.current.rotation.fromArray(rP);
                 that.peer.editor.current.scale.copy(vS);
 
                 that.peer.editor.signals.objectChanged.dispatch(current);
@@ -309,7 +309,7 @@ User.prototype.addSendToSignal = function () {
 			uuid: object.uuid,
 			transformations: {
 				position: JSON.stringify(object.position),
-				rotation: JSON.stringify(object.rotation),
+				rotation: JSON.stringify(object.rotation.toArray()),
 				scale: JSON.stringify(object.scale)
 			}
 		};
