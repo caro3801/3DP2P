@@ -37,7 +37,13 @@ function User(editor, viewport, toolbar) {
 
     });
 
+	window.onunload = window.onbeforeunload = function(e) {
+		if (!!that.peer && !that.peer.destroyed) {
 
+			that.peer.signalsUser.userDisconnected.dispatch(that.peer.editor.sceneId,that.peer.id);
+			that.peer.destroy();
+		}
+	};
 	this.peer.signalsUser = {
 		userOpened : new SIGNALS.Signal(),
 		userConnected : new SIGNALS.Signal(),
@@ -354,5 +360,6 @@ User.prototype.addSendToSignal = function () {
     });
 
 };
+
 
 module.exports = User;
