@@ -67,28 +67,28 @@ sceneStore.getObjects = function(sceneId,callback){
 	xhr.send(null);
 
 };
-sceneStore.addObject = function(sceneId,values){
+sceneStore.addObject = function(sceneId,values,userId){
 	var xhr = new XHR(XHR.createXMLHttpRequest());
-	xhr.post("/scenes/"+sceneId+"/objects",true);
+	xhr.post("/scenes/"+sceneId+"/objects"+"/user/"+userId,true);
 	xhr.addSuccessCallBack(function(){
 		console.log("Object added to scene " + sceneId );
 	});
 	xhr.send(JSON.stringify(values));
 
 };
-sceneStore.updateObject = function(sceneId,objectId,values , callback){
+sceneStore.updateObject = function(sceneId,objectId,values,userId,callback){
 	var xhr = new XHR(XHR.createXMLHttpRequest());
-	xhr.put("/scenes/"+sceneId+"/objects/"+objectId,true);
+	xhr.put("/scenes/"+sceneId+"/objects/"+objectId+"/user/"+userId,true);
 	xhr.addSuccessCallBack(function(){
 		console.log("Object "+ objectId+" updated in scene " + sceneId );
 	});
 	xhr.send(JSON.stringify(values));
 
 };
-sceneStore.removeObject = function(sceneId,objectId,callback){
+sceneStore.removeObject = function(sceneId,objectId,userId,callback){
 	var xhr = new XHR(XHR.createXMLHttpRequest());
 
-	xhr.delete("/scenes/"+sceneId+"/objects/"+objectId,true);
+	xhr.delete("/scenes/"+sceneId+"/objects/"+objectId+"/user/"+userId,true);
 	xhr.addSuccessCallBack(function(){
 		console.log("Object "+ objectId+" removed from scene " + sceneId );
 	});
@@ -125,16 +125,16 @@ sceneStore.sendToServer = function(sceneId,data){
 
 	switch (data.type) {
 		case 'objectAdded':
-			this.addObject(sceneId,data.message.object);
+			this.addObject(sceneId,data.message.object,data.userId);
 			break;
 		case 'dropEnded':
-			this.addObject(sceneId,data.message.object);
+			this.addObject(sceneId,data.message.object,data.userId);
 			break;
 		case 'objectRemoved':
-			this.removeObject(sceneId,data.message.uuid); //values === uuid
+			this.removeObject(sceneId,data.message.uuid,data.userId); //values === uuid
 			break;
 		case 'objectChanged':
-			this.updateObject(sceneId,data.message.uuid,data.message.object);
+			this.updateObject(sceneId,data.message.uuid,data.message.object,data.userId);
 			break;
 	}
 

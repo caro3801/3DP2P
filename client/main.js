@@ -67,14 +67,14 @@ document.addEventListener("DOMContentLoaded",function(event) {
 */
 		 //signals.geometryChanged.add(saveState);
 		 signalsP2P.dropEnded.add(function(o){
-			 sceneStore.sendToServer(sceneId,{type:'objectAdded',message: {object:o.toJSON()}});
+			 sceneStore.sendToServer(sceneId,{type:'objectAdded',message: {object:o.toJSON()},userId:user.peer.id});
 		 });
 		 signalsP2P.objectChanged.add(function(object){
 
-			 sceneStore.sendToServer(sceneId,{type:'objectChanged',  message: {uuid:object.parent.uuid,object:object.parent.toJSON()}});
+			 sceneStore.sendToServer(sceneId,{type:'objectChanged',  message: {uuid:object.parent.uuid,object:object.parent.toJSON()},userId:user.peer.id});
 		 });
 		 signals.objectRemoved.add(function(o){
-			 sceneStore.sendToServer(sceneId,{type:'objectRemoved', message:{uuid:o.uuid}});
+			 sceneStore.sendToServer(sceneId,{type:'objectRemoved', message:{uuid:o.uuid},userId:user.peer.id});
 		 });
 		 //signals.materialChanged.add(saveState);
 
