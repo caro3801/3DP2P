@@ -73,7 +73,7 @@ document.addEventListener("DOMContentLoaded",function(event) {
 
 			 sceneStore.sendToServer(sceneId,{type:'objectChanged',  message: {uuid:object.parent.uuid,object:object.parent.toJSON()},userId:user.peer.id});
 		 });
-		 signals.objectRemoved.add(function(o){
+		 signalsP2P.objectRemoved.add(function(o){
 			 sceneStore.sendToServer(sceneId,{type:'objectRemoved', message:{uuid:o.uuid},userId:user.peer.id});
 		 });
 		 //signals.materialChanged.add(saveState);
@@ -143,11 +143,16 @@ document.addEventListener("DOMContentLoaded",function(event) {
 						}
 					}
 				});
+				var hemisphereLight  = new THREE.HemisphereLight(0xFF9933, 0x3399FF, 0.9);
+
+
+				editor.addObject(hemisphereLight);
+				editor.select(hemisphereLight);
 			}else{
 				throw new Error('Scene id is not matching existing ones...');
 			}
 
-		}
+		};
 		initData();
 
     });

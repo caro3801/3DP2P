@@ -27,7 +27,7 @@ var bdScene = {
 		});
 	},
 	"getAll":function(callback){
-		this.sceneCollection.aggregate([ { $group : { "_id" : "$sceneId" } } ],function(err,results){
+		this.sceneCollection.aggregate([ { $project : { "_id" : "$sceneId",label:"$label" } } ],function(err,results){
 			if(err) {
 				throw new Error('get fail');
 			}

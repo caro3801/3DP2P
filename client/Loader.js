@@ -78,6 +78,7 @@ var Loader = function ( editor ) {
 
 					editor.addObject( mesh );
 					editor.select( mesh );
+					editor.signalsP2P.dropEnded.dispatch(mesh);
 
 				}, false );
 				reader.readAsText( file );
@@ -107,6 +108,7 @@ var Loader = function ( editor ) {
 
 						editor.addObject( mesh );
 						editor.select( mesh );
+						editor.signalsP2P.dropEnded.dispatch(mesh);
 
 					} );
 
@@ -132,6 +134,7 @@ var Loader = function ( editor ) {
 
 						editor.addObject( collada.scene );
 						editor.select( collada.scene );
+						editor.signalsP2P.dropEnded.dispatch(collada.scene);
 
 					} );
 
@@ -236,6 +239,7 @@ var Loader = function ( editor ) {
 
 					editor.addObject( mesh );
 					editor.select( mesh );
+					editor.signalsP2P.dropEnded.dispatch(mesh);
 
 				}, false );
 				reader.readAsText( file );
@@ -260,6 +264,7 @@ var Loader = function ( editor ) {
 
 					editor.addObject( mesh );
 					editor.select( mesh );
+					editor.signalsP2P.dropEnded.dispatch(mesh);
 
 				}, false );
 
@@ -315,6 +320,8 @@ var Loader = function ( editor ) {
 
 					editor.addObject( mesh );
 					editor.select( mesh );
+
+					editor.signalsP2P.dropEnded.dispatch(mesh);
 
 				}, false );
 				reader.readAsText( file );
