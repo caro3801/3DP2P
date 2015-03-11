@@ -123,20 +123,20 @@ var Viewport = function ( editor ) {
 				if ( object.userData.object !== undefined ) {
 
 					// helper
-                    if (!object.locked){
+                  //  if (!object.locked){
 
                         editor.select( object.userData.object );
                         //editor.signalsP2P.objectLocked.dispatch(object.userData.object);
                         //editor.signalsP2P.objectSelected.dispatch(object.userData.object);
-                    }
+                    //}
 
 				} else {
-                    if (!object.locked) {
+                  //  if (!object.locked) {
 
                         editor.select(object);
                         //editor.signalsP2P.objectLocked.dispatch(object);
                         //editor.signalsP2P.objectSelected.dispatch(object);
-                    }
+                  //  }
 				}
 
 			} else {
