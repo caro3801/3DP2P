@@ -110,8 +110,8 @@ router.get('/:sceneId/users', function(req, res) {
 });
 //add userId
 router.post('/:sceneId/users/', function(req, res) {
-	var sceneId=req.params.sceneId;
 	var userId = req.body.userId;
+	var sceneId=req.params.sceneId;
 	bdScene.addUser(sceneId,userId,function(err,results){
 		res.status(200).end();
 	});

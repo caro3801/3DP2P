@@ -181,11 +181,6 @@ User.prototype.listen = function (peerId) {
                 that.peer.editor.getByUuid(uuid);
                 that.peer.editor.unlock(that.peer.editor.current);
                 break;
-            case 'objectFocused':
-                that.peer.editor.getByUuid(uuid);
-                that.peer.editor.focus(that.peer.editor.current);
-
-                break;
             case 'objectRemoved':
 
                 that.peer.editor.getByUuid(uuid);
