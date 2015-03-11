@@ -68,7 +68,9 @@ var Viewport = function ( editor ) {
 	} );
 	transformControls.addEventListener( 'mouseUp', function () {
 		signals.objectChanged.dispatch( transformControls.object );
-		editor.signalsP2P.objectChanged.dispatch( editor.selected  );
+		if(editor.selected instanceof THREE.Scene == false){
+			editor.signalsP2P.objectChanged.dispatch( editor.selected  );
+		}
 		controls.enabled = true;
 
 	} );
@@ -124,7 +126,7 @@ var Viewport = function ( editor ) {
                     if (!object.locked){
 
                         editor.select( object.userData.object );
-                        editor.signalsP2P.objectLocked.dispatch(object.userData.object);
+                        //editor.signalsP2P.objectLocked.dispatch(object.userData.object);
                         //editor.signalsP2P.objectSelected.dispatch(object.userData.object);
                     }
 
@@ -132,18 +134,19 @@ var Viewport = function ( editor ) {
                     if (!object.locked) {
 
                         editor.select(object);
-                        editor.signalsP2P.objectLocked.dispatch(object);
+                        //editor.signalsP2P.objectLocked.dispatch(object);
                         //editor.signalsP2P.objectSelected.dispatch(object);
                     }
 				}
 
 			} else {
 
-                var unselected = editor.selected;
+				editor.select( null );
+                /*var unselected = editor.selected;
 				editor.select( null );
                 if (unselected!==null){
                     editor.signalsP2P.objectUnlocked.dispatch(unselected);
-                }
+                }*/
 
 
 			}
@@ -347,9 +350,8 @@ var Viewport = function ( editor ) {
             if ( object.geometry !== undefined &&
                 object instanceof THREE.Sprite === false ) {
                 selectionBox.update( object );
-                //add material
-                var cylBleu = new THREE.MeshNormalMaterial( { transparent: true, opacity: 0.5 } );
-                object.addMaterial(cylBleu);
+				selectionBox.visible = true;
+
             }
 
         }
@@ -367,10 +369,13 @@ var Viewport = function ( editor ) {
             if ( object.geometry !== undefined &&
                 object instanceof THREE.Sprite === false ) {
                 selectionBox.update( object );
-                //add material
-                delete object.material.splice[0,object.material.length-1];
-                object.addMaterial(cylBleu);
+				selectionBox.visible = true;
             }
+			if ( object instanceof THREE.PerspectiveCamera === false ) {
+
+				transformControls.attach( object );
+
+			}
 
         }
 
