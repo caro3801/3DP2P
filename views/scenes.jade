@@ -1,0 +1,13 @@
+extends layout
+block nav
+    ul.nav.navbar-nav
+        li
+            a(href="/") Home
+        li.active
+            a(href="/scenes") Scenes
+block content
+    h1=subtitle
+    ul
+    each scene in scenes
+        li
+            a(href="/scenes/"+scene._id)=' Scene '+ scene._id

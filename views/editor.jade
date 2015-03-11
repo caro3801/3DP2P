@@ -1,0 +1,24 @@
+extends layout
+block nav
+    ul.nav.navbar-nav
+        li
+            a(href="/") Home
+        li
+            a(href="/scenes") Scenes
+    .navbar-text.pull-right#editorbutton Editor
+block content
+    a(href="/scenes")
+        span.glyphicon.glyphicon-chevron-left
+        | Back to Scenes
+    h1=subtitle+" "
+        small=scene.name
+
+    p Presents are :
+        strong#me
+        span#presents
+    #left
+
+    #editor
+    #viewport-info Viewport info :
+    script(type='application/javascript',langage='javascript', src='/javascripts/front.js')
+    script(type = 'application/javascript', langage = 'javascript', src = '/javascripts/stats.min.js')
