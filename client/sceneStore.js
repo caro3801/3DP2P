@@ -121,6 +121,15 @@ sceneStore.removeUser = function(sceneId,userId){
 	xhr.send(null);
 
 };
+
+sceneStore.flushUsers = function(sceneId){
+	var xhr = new XHR(XHR.createXMLHttpRequest());
+	xhr.delete("/scenes/"+sceneId+"/flush",true);
+	xhr.addSuccessCallBack(function(){
+		console.log("Users  flushed " + sceneId );
+	});
+	xhr.send(null);
+};
 sceneStore.sendToServer = function(sceneId,data){
 
 	switch (data.type) {

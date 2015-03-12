@@ -131,4 +131,14 @@ router.delete('/:sceneId/users/:userId', function(req, res) {
 
 });
 
+//remove userId
+router.delete('/:sceneId/flush', function(req, res) {
+
+	var sceneId=req.params.sceneId;
+	bdScene.flushUsers(sceneId,function(err,results){
+		res.status(200).end();
+	});
+
+});
+
 module.exports = router;

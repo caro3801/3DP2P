@@ -16,6 +16,7 @@ var Viewport = function ( editor ) {
 
 	container.appendChild( new Viewport.Info( editor ) );
 
+
 	var scene = editor.scene;
 	var sceneHelpers = editor.sceneHelpers;
 

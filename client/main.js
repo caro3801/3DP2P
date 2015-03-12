@@ -157,10 +157,22 @@ document.addEventListener("DOMContentLoaded",function(event) {
 
     });
 
+	var flushButton =  document.createElement('div');
+	flushButton.id = "flush";
+	flushButton.className +=" btn btn-primary pull-right";
+	flushButton.addEventListener('click',function(e){
+		sceneStore.flushUsers(editor.sceneId,function(){
+			console.log("users flushed");
+		},false)
+	});
+	var c = document.querySelector('#content');
+	c.appendChild(flushButton);
+
 	var browser=document.createElement("div");
 	browser.id="browser";
 	browser.innerHTML=navigator.userAgent;
-	document.querySelector("#content").appendChild(browser);
+	c.appendChild(browser);
+
 /*
 	var sceneId =document.getElementById("sceneId");
 	sceneId.addEventListener('keydown', function(event){

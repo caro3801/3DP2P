@@ -131,11 +131,16 @@ var Loader = function ( editor ) {
 					loader.parse( xml, function ( collada ) {
 
 						collada.scene.name = filename;
-
-						editor.addObject( collada.scene );
+						for(var it=0;it<collada.scene.children.length;it++){
+							var o=collada.scene.children[it];
+							editor.addObject(o);
+							editor.signalsP2P.dropEnded.dispatch(o);
+						}
+						editor.select( o );
+						/*editor.addObject( collada.scene );
 						editor.select( collada.scene );
 						editor.signalsP2P.dropEnded.dispatch(collada.scene);
-
+						*/
 					} );
 
 				}, false );
