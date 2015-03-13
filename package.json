@@ -20,5 +20,11 @@
     "browserify": "^4.1.7",
     "grunt-browserify": "^2.1.0",
     "grunt-contrib-watch": "^0.6.1"
-  }
+  },
+  "engines":
+    {
+    "node": "0.10.32",
+    "npm": "2.1.2"
+    }
+
 }
