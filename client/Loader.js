@@ -20,7 +20,7 @@ var Loader = function ( editor ) {
 	var scope = this;
 	var signals = editor.signals;
 
-	this.loadFile = function ( file ) {
+	this.loadFile = function ( file , callback ) {
 
 		var filename = file.name;
 		var extension = filename.split( '.' ).pop().toLowerCase();
@@ -215,9 +215,7 @@ var Loader = function ( editor ) {
 					var object = new THREE.OBJLoader().parse( contents );
 					object.name = filename;
 
-					editor.addObject( object );
-					editor.select( object );
-					editor.signalsP2P.dropEnded.dispatch(object);
+					callback(object);
 
 				}, false );
 				reader.readAsText( file );

@@ -62,6 +62,7 @@ var Viewport = function ( editor ) {
 	} );
 
 
+
 	transformControls.addEventListener( 'mouseDown', function () {
 
 		controls.enabled = false;
@@ -83,22 +84,22 @@ var Viewport = function ( editor ) {
 
 	// events
 
-	var getIntersects = function ( point, object ) {
+	var getIntersects = function ( point) {
 
 		var vector = new THREE.Vector3();
 		vector.set( ( point.x * 2 ) - 1, - ( point.y * 2 ) + 1, 0.5 );
 		vector.unproject( camera );
+		vector.sub( camera.position );
+		vector.normalize();
 
-		raycaster.set( camera.position, vector.sub( camera.position ).normalize() );
+		//raycaster.set( camera.position, vector.sub( camera.position ).normalize() );
+		raycaster.set( camera.position, vector);
+		/*var mouse = new THREE.Vector2();
+		mouse.x = point.x * 2 - 1;
+		mouse.y = - point.y * 2 + 1;
+		raycaster.setFromCamera( mouse, camera );*/
 
-		if ( object instanceof Array ) {
-
-			return raycaster.intersectObjects( object );
-
-		}
-
-		return raycaster.intersectObject( object );
-
+		return raycaster.intersectObjects( scene.children );
 	};
 
 	var onDownPosition = new THREE.Vector2();
@@ -111,17 +112,18 @@ var Viewport = function ( editor ) {
 		return [ ( x - rect.left ) / rect.width, ( y - rect.top ) / rect.height ];
 
 	};
-	var handleClick = function () {
+	var handleClick = function (callback) {
 
 		if ( onDownPosition.distanceTo( onUpPosition ) == 0 ) {
 
-			var intersects = getIntersects( onUpPosition, objects );
+			var intersects = getIntersects(onUpPosition);
 
 			if ( intersects.length > 0 ) {
 
 				var object = intersects[ 0 ].object;
 
-				if ( object.userData.object !== undefined ) {
+				callback(object);
+				/*if ( object.userData.object !== undefined ) {
 
 					// helper
                   //  if (!object.locked){
@@ -138,11 +140,11 @@ var Viewport = function ( editor ) {
                         //editor.signalsP2P.objectLocked.dispatch(object);
                         //editor.signalsP2P.objectSelected.dispatch(object);
                   //  }
-				}
+				}*/
 
 			} else {
 
-				editor.select( null );
+				callback(null);
                 /*var unselected = editor.selected;
 				editor.select( null );
                 if (unselected!==null){
@@ -151,9 +153,6 @@ var Viewport = function ( editor ) {
 
 
 			}
-
-			render();
-
 		}
 
 	};
@@ -165,18 +164,16 @@ var Viewport = function ( editor ) {
 		var array = getMousePosition( container, event.clientX, event.clientY );
 		onDownPosition.fromArray( array );
 
-		document.addEventListener( 'mouseup', onMouseUp, false );
-
 	};
 
-	var onMouseUp = function ( event ) {
+	var onMouseUp = function ( event, callback ) {
 
 		var array = getMousePosition( container, event.clientX, event.clientY );
 		onUpPosition.fromArray( array );
 
-		handleClick();
+		handleClick(callback);
 
-		document.removeEventListener( 'mouseup', onMouseUp, false );
+		//document.removeEventListener( 'mouseup', onMouseUp, false );
 
 	};
 
@@ -529,6 +526,7 @@ var Viewport = function ( editor ) {
 
 	var clearColor;
 	var renderer = createRenderer( editor.config.getKey( 'renderer' ), editor.config.getKey( 'renderer/antialias' ) );
+
 	container.appendChild( renderer.domElement );
 
 	animate();
@@ -604,7 +602,51 @@ var Viewport = function ( editor ) {
 
 	}
 
-	return {container:container,transformControls:transformControls, signals : signals, controls:controls};
+	function addObject(object){
+		scene.add(object);
+	}
+
+	function selectObject(object){
+		selectionBox.visible = false;
+		//transformControls.detach();
+
+		if ( object !== null ) {
+
+			/*if ( object.geometry !== undefined &&
+				object instanceof THREE.Sprite === false ) {*/
+
+				selectionBox.update( object );
+				selectionBox.visible = true;
+
+			/*}
+
+			if ( object instanceof THREE.PerspectiveCamera === false ) {
+
+				transformControls.attach( object );
+
+			}*/
+
+		}
+	}
+
+	function addClickEvent(callback){
+		container.addEventListener( 'mousedown', function(event) {
+			onMouseDown(event);
+		}, false);
+		container.addEventListener( 'mouseup', function(event) {
+			onMouseUp(event, callback);
+		}, false );
+	}
+
+	return {
+		container:container,
+		transformControls:transformControls,
+		signals : signals,
+		controls:controls,
+		addObject:addObject,
+		render:render,
+		addClickEvent:addClickEvent,
+		selectObject:selectObject};
 
 };
 module.exports = Viewport;

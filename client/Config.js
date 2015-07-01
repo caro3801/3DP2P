@@ -13,7 +13,7 @@ var Config = function () {
 		'renderer': 'WebGLRenderer',
 		'renderer/antialias': true,
 	
-		'camera/position': [ 500, 250, 500 ],
+		/*'camera/position': [ 500, 250, 500 ],*/
 		'camera/target': [ 0, 0, 0 ],
 
 		'ui/sidebar/animation/collapsed': true,

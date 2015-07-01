@@ -7,7 +7,50 @@ var Viewport = require("./Viewport");
 var User = require('./User');
 var sceneStore  = require('./sceneStore');
 document.addEventListener("DOMContentLoaded",function(event) {
-    var editor = new Editor();
+	var editor = new Editor();
+
+	document.querySelector("#editor").appendChild(editor.viewport.container);
+
+	var geometry = new THREE.BoxGeometry( 10, 10, 10 );
+	var material = new THREE.MeshBasicMaterial( { color: 0xFFFFFF } );
+	var cube = new THREE.Mesh( geometry, material );
+	cube.position.x = 1;
+	//scene.add( cube );
+	editor.addObject(cube);
+
+	editor.camera.position.z = 5;
+
+	document.addEventListener('dragover', function (event) {
+		event.preventDefault();
+		event.dataTransfer.dropEffect = 'copy';
+	}, false);
+
+	document.addEventListener('drop', function (event) {
+		event.preventDefault();
+		editor.loader.loadFile(event.dataTransfer.files[0],function(object){
+			var obj = object;
+			if(object.children.length >0){
+				obj= object.children[0];
+			}
+			editor.addObject(obj);
+			editor.select(obj);
+		});
+
+	}, false);
+
+	editor.signals.themeChanged.dispatch();
+
+	var onWindowResize = function (event) {
+		editor.signals.windowResize.dispatch();
+	};
+
+	window.addEventListener('resize', onWindowResize, false);
+	onWindowResize();
+
+	editor.viewport.render();
+
+
+ /*
 	editor.sceneId = null;
 	var hash=window.location.pathname.split("/");
 	for (var i=0;i<hash.length;++i){
@@ -65,7 +108,7 @@ document.addEventListener("DOMContentLoaded",function(event) {
         signals.materialChanged.add(saveState);
         signals.sceneGraphChanged.add(saveState);
 */
-		 //signals.geometryChanged.add(saveState);
+	/*	 //signals.geometryChanged.add(saveState);
 		 signalsP2P.dropEnded.add(function(o){
 			 sceneStore.sendToServer(sceneId,{type:'objectAdded',message: {object:o.toJSON()},userId:user.peer.id});
 		 });
@@ -88,9 +131,15 @@ document.addEventListener("DOMContentLoaded",function(event) {
 
         document.addEventListener('drop', function (event) {
             event.preventDefault();
-            editor.loader.loadFile(event.dataTransfer.files[0]);
+            editor.loader.loadFile(event.dataTransfer.files[0],function(object){
+
+				editor.addObject(object);
+				editor.camera.position.z = 5;
+			});
 
         }, false);
+
+
 
         document.addEventListener('keydown', function (event) {
             switch (event.keyCode) {
@@ -172,7 +221,7 @@ document.addEventListener("DOMContentLoaded",function(event) {
 	browser.id="browser";
 	browser.innerHTML=navigator.userAgent;
 	c.appendChild(browser);
-
+*/
 /*
 	var sceneId =document.getElementById("sceneId");
 	sceneId.addEventListener('keydown', function(event){

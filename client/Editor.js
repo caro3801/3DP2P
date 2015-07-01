@@ -8,6 +8,7 @@ var signals = require('signals');
 var Config = require ('./Config');
 var Storage = require ('./Storage');
 var Loader = require ('./Loader');
+var Viewport = require ('./Viewport');
 
 
 var Editor = function () {
@@ -91,7 +92,7 @@ var Editor = function () {
     this.storage = new Storage();
     this.loader = new Loader( this );
 
-    this.camera = new THREE.PerspectiveCamera( 50, 1, 0.1, 100000 );
+    this.camera = new THREE.PerspectiveCamera( 75, 1, 0.1, 1000 );
     this.scene = new THREE.Scene();
     this.scene.name = 'Scene';
 
@@ -104,6 +105,13 @@ var Editor = function () {
 
     this.selected = null;
     this.helpers = {};
+
+	this.viewport = new Viewport(this);
+	var that = this;
+	this.viewport.addClickEvent(function(object){
+		that.select(object);
+		that.viewport.render();
+	})
 
 };
 
@@ -135,7 +143,7 @@ Editor.prototype = {
     addObject: function ( object ) {
 
         var scope = this;
-
+/*
         object.traverse( function ( child ) {
 
             if ( child.geometry !== undefined ) scope.addGeometry( child.geometry );
@@ -144,10 +152,12 @@ Editor.prototype = {
             scope.addHelper( child );
 
         } );
+*/
+		this.viewport.addObject(object);
 
-        this.scene.add( object );
+        /*this.scene.add( object );
         this.signals.objectAdded.dispatch( object );
-        this.signals.sceneGraphChanged.dispatch();
+        this.signals.sceneGraphChanged.dispatch();*/
 
     },
 
@@ -317,8 +327,9 @@ Editor.prototype = {
 
     },
     select: function ( object ) {
+		this.viewport.selectObject(object);
 
-        if ( this.selected === object ) return;
+        /*if ( this.selected === object ) return;
 
         var uuid = null;
 
@@ -331,7 +342,7 @@ Editor.prototype = {
         this.selected = object;
 
         this.config.setKey( 'selected', uuid );
-        this.signals.objectSelected.dispatch( object );
+        this.signals.objectSelected.dispatch( object );*/
 
     },
     lock: function ( object ) {
