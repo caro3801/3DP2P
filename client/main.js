@@ -15,7 +15,6 @@ document.addEventListener("DOMContentLoaded",function(event) {
 	var material = new THREE.MeshBasicMaterial( { color: 0xFFFFFF } );
 	var cube = new THREE.Mesh( geometry, material );
 	cube.position.x = 1;
-	//scene.add( cube );
 	editor.addObject(cube);
 
 	editor.camera.position.z = 5;
@@ -35,7 +34,6 @@ document.addEventListener("DOMContentLoaded",function(event) {
 			editor.addObject(obj);
 			editor.select(obj);
 		});
-
 	}, false);
 
 	editor.signals.themeChanged.dispatch();

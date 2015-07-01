@@ -6,17 +6,10 @@ require ('../renderers/RaytracingRenderer');
 var EditorControls = require ('../controls/EditorControls');
 require ('../controls/TransformControls');
 var Viewport = function ( editor ) {
-
-	var signals = editor.signals;
-	var signalsP2P = editor.signalsP2P;
-
 	var container = document.createElement('div');
 	container.id='viewport';
 	container.style.position = 'relative' ;
-
-	container.appendChild( new Viewport.Info( editor ) );
-
-
+	var signals = editor.signals;
 	var scene = editor.scene;
 	var sceneHelpers = editor.sceneHelpers;
 
@@ -31,6 +24,7 @@ var Viewport = function ( editor ) {
 	sceneHelpers.add( grid );
 
 	//
+
 
 	var camera = editor.camera;
 	camera.position.fromArray( editor.config.getKey( 'camera/position' ) );
@@ -92,12 +86,7 @@ var Viewport = function ( editor ) {
 		vector.sub( camera.position );
 		vector.normalize();
 
-		//raycaster.set( camera.position, vector.sub( camera.position ).normalize() );
 		raycaster.set( camera.position, vector);
-		/*var mouse = new THREE.Vector2();
-		mouse.x = point.x * 2 - 1;
-		mouse.y = - point.y * 2 + 1;
-		raycaster.setFromCamera( mouse, camera );*/
 
 		return raycaster.intersectObjects( scene.children );
 	};
@@ -213,7 +202,6 @@ var Viewport = function ( editor ) {
 			var intersect = intersects[ 0 ];
 
 			signals.objectFocused.dispatch( intersect.object );
-			signalsP2P.objectFocused.dispatch( intersect.object );
 
 		}
 
@@ -232,7 +220,6 @@ var Viewport = function ( editor ) {
 
 		transformControls.update();
 		signals.cameraChanged.dispatch( camera );
-		signalsP2P.cameraChanged.dispatch( camera );
 
 	} );
 
@@ -608,7 +595,7 @@ var Viewport = function ( editor ) {
 
 	function selectObject(object){
 		selectionBox.visible = false;
-		//transformControls.detach();
+		transformControls.detach();
 
 		if ( object !== null ) {
 
@@ -617,6 +604,7 @@ var Viewport = function ( editor ) {
 
 				selectionBox.update( object );
 				selectionBox.visible = true;
+			transformControls.attach( object );
 
 			/*}
 
